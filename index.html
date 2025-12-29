@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>epub2txt - Efficient EPUB to Text Converter</title>
+    <link rel="alternate" hreflang="en" href="https://spacesoda.github.io/epub2txt/index.html" />
+    <link rel="alternate" hreflang="zh-TW" href="https://spacesoda.github.io/epub2txt/zh.html" />
+
+    <!-- SEO Meta Tags -->
+    <meta name="description"
+        content="A powerful Python script to batch convert EPUB files to clean plain text. Features smart double-spacing, bilingual UI, and folder processing. Open source and free.">
+    <meta name="keywords"
+        content="epub to txt, epub converter, python script, batch processing, ebook converter, text extraction, open source tool">
+    <meta name="author" content="SPACESODA">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://spacesoda.github.io/epub2txt/">
+    <meta property="og:title" content="epub2txt - Convert EPUB to Text Efficiently">
+    <meta property="og:description"
+        content="Batch convert ebooks to text with smart formatting and zero bloat. The efficient way to handle large libraries.">
+    <meta property="og:image" content="https://spacesoda.github.io/epub2txt/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://spacesoda.github.io/epub2txt/">
+    <meta property="twitter:title" content="epub2txt - Convert EPUB to Text Efficiently">
+    <meta property="twitter:description" content="Batch convert ebooks to text with smart formatting and zero bloat.">
+
+    <!-- Fonts & Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <div class="logo">epub2txt.py</div>
+            <div class="header-links">
+                <div class="lang-group">
+                    <a href="index.html" class="lang-switch active">EN</a>
+                    <span class="lang-separator">|</span>
+                    <a href="zh.html" class="lang-switch">中文</a>
+                </div>
+                <a href="https://github.com/SPACESODA/epub2txt" class="github-link">
+                    GitHub
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.655-3.795-1.275-3.795-1.275-.54-1.38-1.335-1.755-1.335-1.755-1.095-.75.075-.735.075-.735 1.215.09 1.845 1.245 1.845 1.245 1.08 1.86 2.835 1.32 3.525 1.005.105-.795.42-1.32.765-1.635-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405 1.02 0 2.04.135 3 .405 2.28-1.56 3.285-1.23 3.285-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.285 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                    </svg>
+                </a>
+            </div>
+        </header>
+
+
+        <section class="hero">
+            <h1>Convert EPUB to Text<br>Efficiently using epub2txt.py</h1>
+            <p>A powerful, open-source script to batch convert your EPUB files into clean, readable plain text (TXT).
+            </p>
+            <a href="https://github.com/SPACESODA/epub2txt" class="cta-button">Get the Script</a>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <div class="icon">⚡️</div>
+                <h3>Super Fast</h3>
+                <p>Process hundreds of books in seconds efficiently that barely consumes your RAM.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">📂</div>
+                <h3>Batch Processing</h3>
+                <p>Convert single files, list of files, or entire folders of books in one single command.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">✨</div>
+                <h3>Smart Formatting</h3>
+                <p>Automatically preserves structure and adds spacing for a clean, comfortable reading
+                    experience.</p>
+            </div>
+        </section>
+
+        <section class="showcase">
+            <h2>Easy to Use</h2>
+
+            <div class="code-block code-block-spacer">
+                <div class="code-title">Convert a single file</div>
+                <div class="code-content">
+                    <span class="prompt">$</span> <span class="cmd">python3</span> epub2txt.py <span
+                        class="arg">my_book.epub</span>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-title">Convert whole folders</div>
+                <div class="code-content">
+                    <span class="prompt">$</span> <span class="cmd">python3</span> epub2txt.py <span
+                        class="arg">/Books/SciFi/</span> <span class="arg">/Books/History/</span><br>
+                    <span class="comment"># Scanning folder: /Books/SciFi/</span><br>
+                    <span class="comment"># Found 12 EPUBs.</span><br>
+                    <span class="comment"># ...</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; SPACESODA. Released under the MIT License.</p>
+            <p class="footer-github"><a href="https://github.com/SPACESODA/epub2txt">GitHub Repository</a>
+            </p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

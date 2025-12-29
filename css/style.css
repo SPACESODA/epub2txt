@@ -181,6 +181,14 @@ header {
     text-align: center;
 }
 
+.showcase .section-intro {
+    text-align: center;
+}
+
+.showcase .section-intro a {
+    color: #fff;
+}
+
 .code-block {
     background-color: var(--code-bg);
     border: 1px solid var(--border-color);

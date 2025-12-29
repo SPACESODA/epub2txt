@@ -12,6 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
             invalidEpub: "Invalid EPUB/ZIP file.",
             invalidOpf: "Invalid EPUB: OPF file is missing required sections."
         },
+        ja: {
+            tooLarge: (size) => `ファイルサイズが大きすぎます。${size}MB 未満の EPUB を使用してください。`,
+            tooManyFiles: "EPUB に含まれるコンテンツファイルが多すぎるため、安全に処理できません。",
+            noContent: "EPUB 内に読み取り可能な HTML/XHTML コンテンツが見つかりません。",
+            missingOpf: "無効な EPUB です: container.xml で宣言された OPF ファイルが見つかりません。",
+            invalidEpub: "無効な EPUB/ZIP ファイルです。",
+            invalidOpf: "無効な EPUB です: OPF ファイルに必要なセクションが欠落しています。"
+        },
         zh: {
             tooLarge: (size) => `檔案過大，請使用小於 ${size}MB 的 EPUB。`,
             tooManyFiles: "此 EPUB 內容檔案過多，無法安全處理。",
@@ -39,7 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentBlobUrl = null;
 
     // Localization
-    const lang = document.documentElement.lang === 'zh-TW' ? 'zh' : 'en';
+    const currentLang = document.documentElement.lang;
+    const lang = (currentLang === 'zh-TW') ? 'zh' : (currentLang === 'ja' ? 'ja' : 'en');
 
     const TEXT = {
         en: {
@@ -54,6 +63,19 @@ document.addEventListener('DOMContentLoaded', () => {
             genericError: "An unexpected error occurred.",
             convertAnother: "Drag another .epub file to convert",
             selectFile: "select file"
+        },
+        ja: {
+            processing: "処理中...",
+            unzipping: "解凍中...",
+            readingStructure: "構造を読み込み中...",
+            parsingChapters: "章を解析中...",
+            extracting: "テキストを抽出中...",
+            extractingChapter: (current, total) => `章 ${current}/${total} を抽出中...`,
+            errorPrefix: "エラー: ",
+            onlyEpub: ".epub ファイルのみサポートされています。",
+            genericError: "予期しないエラーが発生しました。",
+            convertAnother: "別の .epub ファイルをドラッグして変換",
+            selectFile: "ファイルを選択"
         },
         zh: {
             processing: "處理中...",

@@ -1,28 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cloud.umami.is https://cdnjs.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://spacesoda.github.io; connect-src 'self' https://cloud.umami.is; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>epub2txt - Efficient EPUB to Text Converter</title>
+    <title>epub2txt - EPUB をテキストに効率よく変換</title>
     <link rel="alternate" hreflang="en" href="https://spacesoda.github.io/epub2txt/index.html" />
     <link rel="alternate" hreflang="zh-TW" href="https://spacesoda.github.io/epub2txt/zh.html" />
+    <link rel="alternate" hreflang="ja" href="https://spacesoda.github.io/epub2txt/ja.html" />
     <!-- SEO Meta Tags -->
-    <meta name="description" content="A powerful Python script to batch convert EPUB files to clean plain text. Adds blank lines between paragraphs and supports folder processing. Open source and free.">
-    <meta name="keywords" content="epub to txt, epub converter, python script, batch processing, ebook converter, text extraction, open source tool">
+    <meta name="description" content="EPUB ファイルを一括でクリーンなプレーンテキストに変換する強力な Python スクリプト。段落間に空行を追加し、フォルダごとの処理もサポート。オープンソースで無料です。">
+    <meta name="keywords" content="epub txt 変換, epub コンバーター, python スクリプト, 一括処理, 電子書籍 変換, テキスト抽出, オープンソース ツール">
     <meta name="author" content="SPACESODA">
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://spacesoda.github.io/epub2txt/">
-    <meta property="og:title" content="epub2txt - Convert EPUB to Text Efficiently">
-    <meta property="og:description" content="Batch convert ebooks to text with smart formatting and zero bloat. The efficient way to handle large libraries.">
+    <meta property="og:url" content="https://spacesoda.github.io/epub2txt/ja.html">
+    <meta property="og:title" content="epub2txt - EPUB を効率よくテキストに変換">
+    <meta property="og:description" content="電子書籍をスマートな整形と無駄のない構成で一括してテキストに変換します。大規模なライブラリの処理に最適です。">
     <meta property="og:image" content="https://spacesoda.github.io/epub2txt/og-image.png">
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://spacesoda.github.io/epub2txt/">
-    <meta property="twitter:title" content="epub2txt - Convert EPUB to Text Efficiently">
-    <meta property="twitter:description" content="Batch convert ebooks to text with smart formatting and zero bloat.">
+    <meta property="twitter:url" content="https://spacesoda.github.io/epub2txt/ja.html">
+    <meta property="twitter:title" content="epub2txt - EPUB を効率よくテキストに変換">
+    <meta property="twitter:description" content="電子書籍をスマートな整形と無駄のない構成で一括してテキストに変換します。">
     <!-- Fonts & Styles -->
     <link rel="stylesheet" href="style.css">
     <!-- Umami Analytics -->
@@ -39,9 +40,9 @@
             <div class="logo">epub2txt</div>
             <div class="header-links">
                 <div class="lang-group">
-                    <a href="index.html" class="lang-switch active">EN</a>
+                    <a href="index.html" class="lang-switch">EN</a>
                     <span class="lang-separator">|</span>
-                    <a href="ja.html" class="lang-switch">JP</a>
+                    <a href="ja.html" class="lang-switch active">JP</a>
                     <span class="lang-separator">|</span>
                     <a href="zh.html" class="lang-switch">中文</a>
                 </div>
@@ -55,79 +56,78 @@
         </header>
 
         <section class="hero">
-            <h1>Convert EPUB to Text<br>Efficiently using epub2txt</h1>
-            <p>A powerful, open-source Python script to batch convert your EPUB files into clean, readable plain text
-                (TXT).
+            <h1>epub2txt で<br>EPUB をテキストに効率変換</h1>
+            <p>EPUB ファイルを一括で、読みやすく整えられたプレーンテキスト (TXT) に変換する、強力なオープンソース Python スクリプト。
             </p>
             <div class="hero-buttons">
-                <a href="https://github.com/SPACESODA/epub2txt" class="cta-button primary" data-umami-event="Get Script Button">Get the Script</a>
-                <a href="#app" class="cta-button secondary" data-umami-event="Go to Converter Button">Convert Online</a>
+                <a href="https://github.com/SPACESODA/epub2txt" class="cta-button primary" data-umami-event="Get Script Button">スクリプトを入手</a>
+                <a href="#app" class="cta-button secondary" data-umami-event="Go to Converter Button">オンラインで変換</a>
             </div>
         </section>
 
         <section class="features">
             <div class="feature-card">
                 <div class="icon">⚡️</div>
-                <h3>Super Fast</h3>
-                <p>Process hundreds of books in seconds efficiently that barely consumes your RAM.</p>
+                <h3>超高速</h3>
+                <p>数百冊の本を数秒で効率的に処理し、RAM をほとんど消費しません。</p>
             </div>
             <div class="feature-card">
                 <div class="icon">📂</div>
-                <h3>Batch Processing</h3>
-                <p>Convert single files, list of files, or entire folders of books in one single command.</p>
+                <h3>一括処理</h3>
+                <p>単一ファイル、ファイルリスト、またはフォルダ全体の本を一つのコマンドで変換できます。</p>
             </div>
             <div class="feature-card">
                 <div class="icon">✨</div>
-                <h3>Auto Formatting</h3>
-                <p>Automatically preserves structure and adds spacing for a clean, comfortable reading experience.</p>
+                <h3>自動整形</h3>
+                <p>構造を自動的に保持し、快適な読書体験のために適切な間隔を追加します。</p>
             </div>
         </section>
 
         <section class="showcase">
-            <h2>Easy to Use</h2>
+            <h2>使い方は簡単</h2>
 
             <div class="code-block code-block-spacer">
-                <div class="code-title">Convert a single file</div>
+                <div class="code-title">単一ファイルの変換</div>
                 <div class="code-content">
                     <span class="prompt">$</span> <span class="cmd">./run.sh</span> <span class="arg">my_book.epub</span>
                 </div>
             </div>
 
             <div class="code-block">
-                <div class="code-title">Convert whole folders</div>
+                <div class="code-title">フォルダごとの変換</div>
                 <div class="code-content">
                     <span class="prompt">$</span> <span class="cmd">./run.sh</span> <span class="arg">/Books/SciFi/</span> <span class="arg">/Books/History/</span><br>
-                    <span class="comment"># Scanning folder: /Books/SciFi/</span><br>
-                    <span class="comment"># Found 12 EPUBs.</span><br>
+                    <span class="comment"># フォルダをスキャン中: /Books/SciFi/</span><br>
+                    <span class="comment"># 12 個の EPUB を発見。</span><br>
                     <span class="comment"># ...</span>
                 </div>
             </div>
         </section>
 
         <section id="app" class="converter-section">
-            <h2>Convert Online</h2>
-            <p class="section-intro">Powered by the same logic as the Python script, running securely in your browser. Convert one file at a time.</p>
+            <h2>オンラインで変換</h2>
+            <p class="section-intro">Python スクリプトと同じロジックを使用し、ブラウザ内で安全に実行されます。一度に1つのファイルを変換します。</p>
             <div class="converter-card">
                 <div id="drop-zone" class="drop-zone">
                     <div class="drop-content">
                         <div class="icon">📂</div>
-                        <h2>Drag & Drop EPUB here</h2>
-                        <p>or click to select file</p>
+                        <h2>EPUB をここにドラッグ＆ドロップ</h2>
+                        <p>またはクリックしてファイルを選択</p>
                         <input type="file" id="file-input" accept=".epub" hidden>
                     </div>
                     <div id="loading-state" class="hidden">
                         <div class="spinner"></div>
-                        <p id="status-text">Processing...</p>
+                        <p id="status-text">処理中...</p>
                     </div>
                     <div id="success-state" class="hidden">
                         <div class="icon success">✅</div>
                         <h2 id="success-filename">book.txt</h2>
-                        <button id="download-btn" class="cta-button primary" data-umami-event="Download TXT Button">Download TXT</button>
+                        <button id="download-btn" class="cta-button primary" data-umami-event="Download TXT Button">TXT をダウンロード</button>
                     </div>
                     <div id="error-state" class="hidden">
                         <div class="icon error">⚠️</div>
-                        <p id="error-msg">Only .epub files are supported.</p>
-                        <button id="retry-btn" class="cta-button secondary">Try Again</button>
+                        <p id="error-msg">.epub ファイルのみサポートされています。</p>
+                        <button id="retry-btn" class="cta-button secondary">もう一度試す</button>
                     </div>
                 </div>
                 <div id="reset-container" class="reset-container"></div>

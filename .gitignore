@@ -12,6 +12,7 @@ env/
 # Content Files
 *.epub
 *.txt
+!requirements.txt
 
 # IDE
 .vscode/

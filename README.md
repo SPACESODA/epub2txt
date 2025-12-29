@@ -12,75 +12,76 @@
 *   **Clean Output**: Removes images, styles, and scripts, keeping only the text.  
     **乾淨輸出**: 移除圖片、樣式和腳本，只保留文字。
 
-## Installation / 安裝
+## Quick Start / 快速開始
 
-1.  **Requirement**: You need Python 3 installed.  
-    **需求**: 您需要安裝 Python 3。
-2.  **Setup Environment**: Create and activate a virtual environment. This is **required** on many modern systems to prevent installation errors.  
-    **設定環境**: 建立並啟用虛擬環境。這在許多現代系統上是**必須**的，以避免安裝錯誤。
-
-    **Mac / Linux**:
+### Mac / Linux
+1.  Open your terminal.
+2.  Navigate to the script folder using `cd`:
     ```bash
+    cd Downloads/epub2txt
+    ```
+3.  Run the helper script `./run.sh `:
+    ```bash
+    ./run.sh /path/to/myBook.epub
+    ```
+
+### Windows
+1.  Open Command Prompt (cmd).
+2.  Navigate to the script folder using `cd`:
+    ```bat
+    cd Downloads\epub2txt
+    ```
+3.  Run the helper script `run.bat `:
+    ```bat
+    run.bat C:\path\to\myBook.epub
+    ```
+
+This will automatically set up the environment and install dependencies for you.  
+這將自動為您設置環境並安裝依賴項。
+
+---
+
+## Manual Installation / 手動安裝
+
+If you prefer to run it manually or don't want to use the helper scripts:
+
+1.  **Requirement**: Python 3 installed.
+2.  **Environment**:
+    ```bash
+    # Mac / Linux
     python3 -m venv .venv
     source .venv/bin/activate
+    pip install -r requirements.txt
     ```
-
-    **Windows**:
     ```bat
+    :: Windows
     python -m venv .venv
     .venv\Scripts\activate
+    pip install -r requirements.txt
     ```
-
-3.  **Install Library**: Install the required `beautifulsoup4` library.  
-    **安裝庫**: 安裝必需的 `beautifulsoup4` 庫。
-
+3.  **Run**:
     ```bash
-    pip install beautifulsoup4
+    python3 epub2txt.py
     ```
 
-## Usage / 用法
+## Usage Examples / 用法示例
 
-### 1. Single File / 單個文件
+**Note**: Replace `./run.sh` with `run.bat` on Windows.
+**注意**: 在 Windows 上請將 `./run.sh` 替換為 `run.bat`。
 
-Convert a single EPUB file. The output TXT will have the same name.  
-轉換單個 EPUB 文件。輸出的 TXT 文件將使用相同的名稱。
-
+**Custom Output Name / 自定義輸出名稱**
 ```bash
-python3 epub2txt.py book.epub
+./run.sh myBook.epub -o myBook001.txt
 ```
 
-**Custom Output Name / 自定義輸出名稱**:  
-(Only works for single files / 僅適用於單個文件)
-
+**Multiple Files / 多個文件**
 ```bash
-python3 epub2txt.py book.epub -o my_book.txt
+./run.sh book1.epub book2.epub
 ```
 
-### 2. Multiple Files / 多個文件
-
-Convert multiple specific files at once.  
-一次轉換多個特定文件。
-
+**Folder Processing / 文件夾處理**
 ```bash
-python3 epub2txt.py book1.epub book2.epub book3.epub
-```
-
-### 3. Folder Processing / 文件夾處理
-
-Convert all EPUB files inside a folder (non-recursive).  
-轉換文件夾內的所有 EPUB 文件 (不包含子文件夾)。
-
-```bash
-python3 epub2txt.py /path/to/MyBooks/
-```
-
-### 4. Mixed Input / 混合輸入
-
-Combine files and folders in one command.  
-在一個指令中混合使用文件和文件夾。
-
-```bash
-python3 epub2txt.py specific_book.epub /folder1/ /folder2/
+./run.sh /path/to/MyBooks/
 ```
 
 ## Notes / 備註

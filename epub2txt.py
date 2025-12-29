@@ -17,9 +17,10 @@ try:
 except ImportError:
     print("Error: Required library 'beautifulsoup4' is not installed")
     print("錯誤: 必需的 'beautifulsoup4' 庫尚未安裝")
-    print("Please refer to README.md for installation instructions (Virtual Environment recommended)")
-    print("請參考 README.md 上的安裝說明 (建議使用虛擬環境)")
-    print("pip install beautifulsoup4")
+    print("Tip: Use the helper script to auto-install dependencies:")
+    print("提示: 使用輔助腳本自動安裝依賴項:")
+    print("Mac/Linux: ./run.sh ")
+    print("Windows: run.bat ")
     sys.exit(1)
 
 # XML Namespaces used in EPUB standards.
@@ -189,10 +190,31 @@ def epub_to_text(epub_path: str, output_txt_path: str) -> None:
 if __name__ == "__main__":
     # Setup command line arguments
     parser = argparse.ArgumentParser(description="Convert Large EPUB files to TXT efficiently 將大型 EPUB 文件高效轉換為 TXT")
-    parser.add_argument("epub_paths", nargs='+', help="File or Folder path(s) containing EPUBs EPUB 文件或文件夾路徑")
+    parser.add_argument("epub_paths", nargs='*', help="File or Folder path(s) containing EPUBs EPUB 文件或文件夾路徑")
     parser.add_argument("-o", "--output", help="Path to the output TXT file (optional, single file only) 輸出 TXT 文件路徑 (可選，僅限單文件)")
 
     args = parser.parse_args()
+    
+    # Interactive mode: If no arguments provided, ask user for input
+    if not args.epub_paths:
+        print("Tip: You can drag and drop a file here / 提示: 您可以將文件拖放到這裡")
+        print("Please enter the path to an EPUB file or folder:")
+        print("請輸入 EPUB 文件或文件夾的路徑:")
+        p = input("> ").strip()
+        
+        # Handle common drag-and-drop formatting (quotes and escapes)
+        if p.startswith("'") and p.endswith("'"):
+            p = p[1:-1]
+        elif p.startswith('"') and p.endswith('"'):
+            p = p[1:-1]
+        # Fix escaped spaces from terminal
+        p = p.replace(r'\ ', ' ')
+        
+        if p:
+            args.epub_paths = [p]
+        else:
+            print("No path entered / 未輸入路徑")
+            sys.exit(0)
     
     # Step 1: Expand folders into a list of specific files
     files_to_process = []

@@ -3,38 +3,40 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cloud.umami.is https://cdnjs.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://spacesoda.github.io; connect-src 'self' https://cloud.umami.is; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>epub2txt - 高效的 EPUB 轉 TXT 工具</title>
     <link rel="alternate" hreflang="en" href="https://spacesoda.github.io/epub2txt/index.html" />
     <link rel="alternate" hreflang="zh-TW" href="https://spacesoda.github.io/epub2txt/zh.html" />
-
     <!-- SEO Meta Tags -->
     <meta name="description" content="一個強大的 Python 腳本，用於將 EPUB 檔案批量轉換為清晰的純文本。自動在段落間加入空行並支援資料夾處理。開源且免費。">
     <meta name="keywords" content="epub 轉 txt, epub 轉換器, python 腳本, 批量處理, 電子書格式轉換, 文本提取, 開源工具">
     <meta name="author" content="SPACESODA">
-
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://spacesoda.github.io/epub2txt/zh.html">
     <meta property="og:title" content="epub2txt - 高效將 EPUB 轉換為純文本">
     <meta property="og:description" content="批量將電子書轉換為文本，具有智能排版且零內存負擔。處理大型圖書館的高效方式。">
     <meta property="og:image" content="https://spacesoda.github.io/epub2txt/og-image.png">
-
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://spacesoda.github.io/epub2txt/zh.html">
     <meta property="twitter:title" content="epub2txt - 高效將 EPUB 轉換為純文本">
     <meta property="twitter:description" content="批量將電子書轉換為文本，具有智能排版且零內存負擔。">
-
     <!-- Fonts & Styles -->
     <link rel="stylesheet" href="style.css">
+    <!-- Umami Analytics -->
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="8771ed9f-edd3-4665-bf16-1bc95940af08"></script>
+    <!-- JSZip & Custom Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script defer src="app/epub2txt.js"></script>
 </head>
 
 <body>
 
     <div class="container">
         <header>
-            <div class="logo">epub2txt.py</div>
+            <div class="logo">epub2txt</div>
             <div class="header-links">
                 <div class="lang-group">
                     <a href="index.html" class="lang-switch">EN</a>
@@ -44,17 +46,19 @@
                 <a href="https://github.com/SPACESODA/epub2txt" class="github-link">
                     <span class="github-text">GitHub</span>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.655-3.795-1.275-3.795-1.275-.54-1.38-1.335-1.755-1.335-1.755-1.095-.75.075-.735.075-.735 1.215.09 1.845 1.245 1.845 1.245 1.08 1.86 2.835 1.32 3.525 1.005.105-.795.42-1.32.765-1.635-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405 1.02 0 2.04.135 3 .405 2.28-1.56 3.285-1.23 3.285-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.285 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.655-3.795-1.275-3.795-1.275-.54-1.38-1.335-1.755-1.335-1.755-1.095-.75.075-.735.075-.735 1.215.09 1.845 1.245 1.845 1.245 1.08 1.86 2.835 1.32 3.525 1.005.105-.795.42-1.32.765-1.635-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405 1.02 0 2.04.135 3 .405 2.28-1.56 3.285-1.23 3.285-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.285 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                     </svg>
                 </a>
             </div>
         </header>
 
         <section class="hero">
-            <h1>高效將 EPUB 轉為純文本<br>使用 epub2txt.py</h1>
-            <p>一個強大的開源腳本，可將整個電子書館批量轉換為清晰、易讀的純文本 (TXT)。</p>
-            <a href="https://github.com/SPACESODA/epub2txt" class="cta-button">前往腳本</a>
+            <h1>使用 epub2txt<br>高效將 EPUB 轉為純文本</h1>
+            <p>一個強大的開源 Python 腳本，可將整個電子書館批量轉換為清晰、易讀的純文本 (TXT)。</p>
+            <div class="hero-buttons">
+                <a href="https://github.com/SPACESODA/epub2txt" class="cta-button primary" data-umami-event="Get Script Button">前往腳本</a>
+                <a href="#app" class="cta-button secondary" data-umami-event="Go to Converter Button">線上轉換</a>
+            </div>
         </section>
 
         <section class="features">
@@ -81,20 +85,48 @@
             <div class="code-block code-block-spacer">
                 <div class="code-title">轉換單個檔案</div>
                 <div class="code-content">
-                    <span class="prompt">$</span> <span class="cmd">./run.sh</span> <span
-                        class="arg">my_book.epub</span>
+                    <span class="prompt">$</span> <span class="cmd">./run.sh</span> <span class="arg">my_book.epub</span>
                 </div>
             </div>
 
             <div class="code-block">
                 <div class="code-title">轉換整個資料夾</div>
                 <div class="code-content">
-                    <span class="prompt">$</span> <span class="cmd">./run.sh</span> <span
-                        class="arg">/Books/SciFi/</span> <span class="arg">/Books/History/</span><br>
+                    <span class="prompt">$</span> <span class="cmd">./run.sh</span> <span class="arg">/Books/SciFi/</span> <span class="arg">/Books/History/</span><br>
                     <span class="comment"># Scanning folder: /Books/SciFi/</span><br>
                     <span class="comment"># Found 12 EPUBs.</span><br>
                     <span class="comment"># ...</span>
                 </div>
+            </div>
+        </section>
+
+        <section id="app" class="converter-section">
+            <h2>線上轉換</h2>
+            <p class="section-intro">採用與 Python 腳本相同的邏輯，安全地在你的瀏覽器執行轉換。每次只轉換一個檔案。</p>
+            <div class="converter-card">
+                <div id="drop-zone" class="drop-zone">
+                    <div class="drop-content">
+                        <div class="icon">📂</div>
+                        <h2>拖放 EPUB 檔案至此</h2>
+                        <p>或點擊選擇檔案</p>
+                        <input type="file" id="file-input" accept=".epub" hidden>
+                    </div>
+                    <div id="loading-state" class="hidden">
+                        <div class="spinner"></div>
+                        <p id="status-text">處理中...</p>
+                    </div>
+                    <div id="success-state" class="hidden">
+                        <div class="icon success">✅</div>
+                        <h2 id="success-filename">book.txt</h2>
+                        <button id="download-btn" class="cta-button primary" data-umami-event="Download TXT Button">下載 TXT</button>
+                    </div>
+                    <div id="error-state" class="hidden">
+                        <div class="icon error">⚠️</div>
+                        <p id="error-msg">處理檔案時發生錯誤</p>
+                        <button id="retry-btn" class="cta-button secondary">重試</button>
+                    </div>
+                </div>
+                <div id="reset-container" class="reset-container"></div>
             </div>
         </section>
     </div>

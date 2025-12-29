@@ -1,0 +1,7 @@
+{
+    "html.format.enable": false,
+    "[html]": {
+        "editor.defaultFormatter": null,
+        "editor.formatOnSave": false
+    }
+}

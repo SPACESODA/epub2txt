@@ -3,38 +3,40 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cloud.umami.is https://cdnjs.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://spacesoda.github.io; connect-src 'self' https://cloud.umami.is; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>epub2txt - Efficient EPUB to Text Converter</title>
     <link rel="alternate" hreflang="en" href="https://spacesoda.github.io/epub2txt/index.html" />
     <link rel="alternate" hreflang="zh-TW" href="https://spacesoda.github.io/epub2txt/zh.html" />
-
     <!-- SEO Meta Tags -->
     <meta name="description" content="A powerful Python script to batch convert EPUB files to clean plain text. Adds blank lines between paragraphs and supports folder processing. Open source and free.">
     <meta name="keywords" content="epub to txt, epub converter, python script, batch processing, ebook converter, text extraction, open source tool">
     <meta name="author" content="SPACESODA">
-
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://spacesoda.github.io/epub2txt/">
     <meta property="og:title" content="epub2txt - Convert EPUB to Text Efficiently">
     <meta property="og:description" content="Batch convert ebooks to text with smart formatting and zero bloat. The efficient way to handle large libraries.">
     <meta property="og:image" content="https://spacesoda.github.io/epub2txt/og-image.png">
-
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://spacesoda.github.io/epub2txt/">
     <meta property="twitter:title" content="epub2txt - Convert EPUB to Text Efficiently">
     <meta property="twitter:description" content="Batch convert ebooks to text with smart formatting and zero bloat.">
-
     <!-- Fonts & Styles -->
     <link rel="stylesheet" href="style.css">
+    <!-- Umami Analytics -->
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="8771ed9f-edd3-4665-bf16-1bc95940af08"></script>
+    <!-- JSZip & Custom Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script defer src="app/epub2txt.js"></script>
 </head>
 
 <body>
 
     <div class="container">
         <header>
-            <div class="logo">epub2txt.py</div>
+            <div class="logo">epub2txt</div>
             <div class="header-links">
                 <div class="lang-group">
                     <a href="index.html" class="lang-switch active">EN</a>
@@ -44,19 +46,21 @@
                 <a href="https://github.com/SPACESODA/epub2txt" class="github-link">
                     <span class="github-text">GitHub</span>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.655-3.795-1.275-3.795-1.275-.54-1.38-1.335-1.755-1.335-1.755-1.095-.75.075-.735.075-.735 1.215.09 1.845 1.245 1.845 1.245 1.08 1.86 2.835 1.32 3.525 1.005.105-.795.42-1.32.765-1.635-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405 1.02 0 2.04.135 3 .405 2.28-1.56 3.285-1.23 3.285-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.285 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.655-3.795-1.275-3.795-1.275-.54-1.38-1.335-1.755-1.335-1.755-1.095-.75.075-.735.075-.735 1.215.09 1.845 1.245 1.845 1.245 1.08 1.86 2.835 1.32 3.525 1.005.105-.795.42-1.32.765-1.635-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405 1.02 0 2.04.135 3 .405 2.28-1.56 3.285-1.23 3.285-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.285 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                     </svg>
                 </a>
             </div>
         </header>
 
-
         <section class="hero">
-            <h1>Convert EPUB to Text<br>Efficiently using epub2txt.py</h1>
-            <p>A powerful, open-source script to batch convert your EPUB files into clean, readable plain text (TXT).
+            <h1>Convert EPUB to Text<br>Efficiently using epub2txt</h1>
+            <p>A powerful, open-source Python script to batch convert your EPUB files into clean, readable plain text
+                (TXT).
             </p>
-            <a href="https://github.com/SPACESODA/epub2txt" class="cta-button">Get the Script</a>
+            <div class="hero-buttons">
+                <a href="https://github.com/SPACESODA/epub2txt" class="cta-button primary" data-umami-event="Get Script Button">Get the Script</a>
+                <a href="#app" class="cta-button secondary" data-umami-event="Go to Converter Button">Convert Online</a>
+            </div>
         </section>
 
         <section class="features">
@@ -73,8 +77,7 @@
             <div class="feature-card">
                 <div class="icon">✨</div>
                 <h3>Smart Formatting</h3>
-                <p>Automatically preserves structure and adds spacing for a clean, comfortable reading
-                    experience.</p>
+                <p>Automatically preserves structure and adds spacing for a clean, comfortable reading experience.</p>
             </div>
         </section>
 
@@ -84,20 +87,48 @@
             <div class="code-block code-block-spacer">
                 <div class="code-title">Convert a single file</div>
                 <div class="code-content">
-                    <span class="prompt">$</span> <span class="cmd">./run.sh</span> <span
-                        class="arg">my_book.epub</span>
+                    <span class="prompt">$</span> <span class="cmd">./run.sh</span> <span class="arg">my_book.epub</span>
                 </div>
             </div>
 
             <div class="code-block">
                 <div class="code-title">Convert whole folders</div>
                 <div class="code-content">
-                    <span class="prompt">$</span> <span class="cmd">./run.sh</span> <span
-                        class="arg">/Books/SciFi/</span> <span class="arg">/Books/History/</span><br>
+                    <span class="prompt">$</span> <span class="cmd">./run.sh</span> <span class="arg">/Books/SciFi/</span> <span class="arg">/Books/History/</span><br>
                     <span class="comment"># Scanning folder: /Books/SciFi/</span><br>
                     <span class="comment"># Found 12 EPUBs.</span><br>
                     <span class="comment"># ...</span>
                 </div>
+            </div>
+        </section>
+
+        <section id="app" class="converter-section">
+            <h2>Convert Online</h2>
+            <p class="section-intro">Powered by the same logic as the Python script, running securely in your browser. Convert one file at a time.</p>
+            <div class="converter-card">
+                <div id="drop-zone" class="drop-zone">
+                    <div class="drop-content">
+                        <div class="icon">📂</div>
+                        <h2>Drag & Drop EPUB here</h2>
+                        <p>or click to select file</p>
+                        <input type="file" id="file-input" accept=".epub" hidden>
+                    </div>
+                    <div id="loading-state" class="hidden">
+                        <div class="spinner"></div>
+                        <p id="status-text">Processing...</p>
+                    </div>
+                    <div id="success-state" class="hidden">
+                        <div class="icon success">✅</div>
+                        <h2 id="success-filename">book.txt</h2>
+                        <button id="download-btn" class="cta-button primary" data-umami-event="Download TXT Button">Download TXT</button>
+                    </div>
+                    <div id="error-state" class="hidden">
+                        <div class="icon error">⚠️</div>
+                        <p id="error-msg">Only .epub files are supported.</p>
+                        <button id="retry-btn" class="cta-button secondary">Try Again</button>
+                    </div>
+                </div>
+                <div id="reset-container" class="reset-container"></div>
             </div>
         </section>
     </div>
@@ -105,8 +136,7 @@
     <footer>
         <div class="container">
             <p>&copy; SPACESODA / ANTHONYC<br>Released under the MIT License.</p>
-            <p class="footer-github"><a href="https://github.com/SPACESODA/epub2txt">GitHub Repository</a>
-            </p>
+            <p class="footer-github"><a href="https://github.com/SPACESODA/epub2txt">GitHub Repository</a></p>
         </div>
     </footer>
 

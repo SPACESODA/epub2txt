@@ -24,6 +24,10 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 .container {
     max-width: 1000px;
     margin: 0 auto;
@@ -226,7 +230,8 @@ header {
 /* Footer */
 footer {
     border-top: 1px solid var(--border-color);
-    padding: 40px 0 80px 0;
+    margin-top: 20px;
+    padding: 60px 0 80px 0;
     text-align: center;
     color: #52525B;
     font-size: 0.9rem;
@@ -267,4 +272,203 @@ footer a:hover {
     .github-text {
         display: none;
     }
+
+    .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 0 20px;
+    }
+
+    .cta-button {
+        width: 100%;
+        max-width: 300px;
+        text-align: center;
+    }
+}
+
+/* --- Web App Integration --- */
+
+.hero-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 32px;
+}
+
+/* Updated Button Styles */
+.cta-button {
+    cursor: pointer;
+    /* Ensure pointer on buttons */
+}
+
+.cta-button.primary {
+    background-color: var(--accent-color);
+    color: white;
+    border: 1px solid transparent;
+}
+
+.cta-button.secondary {
+    background-color: #ffffff;
+    color: #0F0F11;
+    border: 1px solid #E4E4E7;
+    box-shadow: 0 6px 18px rgba(255, 255, 255, 0.08);
+}
+
+.cta-button.secondary:hover {
+    background-color: #F4F4F5;
+    border-color: #D4D4D8;
+    color: #0F0F11;
+}
+
+/* Converter Section */
+.converter-section {
+    padding: 80px 0;
+    text-align: center;
+    /* Optional background distinction if needed, but keeping simple for now */
+}
+
+.converter-section h2 {
+    font-size: 2rem;
+    margin-bottom: 16px;
+    font-weight: 700;
+}
+
+.section-intro {
+    font-size: 1.1rem;
+    color: #A1A1AA;
+    margin-bottom: 40px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.converter-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    min-height: 350px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.drop-zone {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 28px 16px 32px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+    border-color: var(--accent-color);
+    background-color: rgba(59, 130, 246, 0.1);
+    /* Low opacity blue */
+}
+
+.drop-content .icon,
+.icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    display: inline-block;
+}
+
+.drop-content h2 {
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+    color: #fff;
+    font-weight: 600;
+}
+
+.drop-content p {
+    color: #A1A1AA;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--accent-color);
+    animation: spin 1s ease-in-out infinite;
+    margin: 0 auto 16px auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Success/Error States */
+#success-state h2 {
+    margin-bottom: 24px;
+    color: #4ADE80;
+    /* Green-400 */
+}
+
+#error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding-top: 12px;
+}
+
+#error-state .icon {
+    margin-top: 18px;
+    margin-bottom: 4px;
+}
+
+#error-state p {
+    margin: 6px 0 24px 0;
+    color: #F87171;
+    /* Red-400 */
+}
+
+#success-filename {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-color) !important;
+    font-size: 0.95rem;
+    word-break: break-all;
+}
+
+/* Reset Links */
+.reset-container {
+    margin-top: 12px;
+    color: #7A7A86;
+    font-size: 0.75rem;
+}
+
+.divider {
+    margin: 0 8px;
+    opacity: 0.5;
+}
+
+.text-link {
+    color: var(--accent-color);
+    cursor: pointer;
+    text-decoration: none;
+    transition: 0.2s;
+    border-bottom: 1px dotted transparent;
+}
+
+.text-link:hover {
+    color: white;
+    border-bottom-color: var(--accent-color);
 }

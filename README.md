@@ -7,14 +7,14 @@
 
 * **Batch Processing**: Convert multiple files or top-level folders in one run (non-recursive).  
   **批量處理**: 一次轉換多個檔案或資料夾 (僅掃描第一層)。
-* **Smart Formatting**: Adds blank lines between paragraphs for better readability.  
-  **智能排版**: 在段落之間添加空行，提高可讀性。
-* **Clean Output**: Strips images, styles, scripts, and metadata—keeps only text from `.html/.xhtml` files.  
-  **乾淨輸出**: 移除圖片、樣式、腳本與中繼資料，只保留 `.html/.xhtml` 文字。
-* **Interactive Drag & Drop**: Run without arguments to enter interactive mode. Supports dragging multiple files and folders at once!  
-  **互動式拖放**: 無參數執行即可進入互動模式，支援一次拖放多個檔案與資料夾！
-* **Safe defaults**: If `-o` points to a new folder, it will be created; `-o` is for single inputs only.  
-  **安全預設**: 若 `-o` 指向的新資料夾不存在會自動建立；`-o` 只適用單檔輸入。
+* **Formatting**: Adds blank lines between paragraphs.  
+  **段落排版**: 在段落之間添加空行。
+* **Text Extraction**: Strips images, styles, scripts, and metadata—keeps only text from `.html/.xhtml` files.  
+  **文字提取**: 移除圖片、樣式、腳本與中繼資料，只保留 `.html/.xhtml` 文字。
+* **Interactive Mode**: Run without arguments to enter interactive mode. Supports dragging multiple files and folders.  
+  **互動模式**: 無參數執行即可進入互動模式，支援拖放多個檔案與資料夾。
+* **Output Handling**: If `-o` points to a new folder, it will be created; `-o` is for single inputs only.  
+  **輸出處理**: 若 `-o` 指向的新資料夾不存在會自動建立；`-o` 只適用單檔輸入。
 
 ## Quick Start / 快速開始
 

@@ -11,6 +11,7 @@ env/
 
 # Content Files
 *.epub
+!/test-data/*.epub
 *.txt
 !requirements.txt
 

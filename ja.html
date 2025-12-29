@@ -5,27 +5,31 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cloud.umami.is https://cdnjs.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://spacesoda.github.io; connect-src 'self' https://cloud.umami.is; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>epub2txt - EPUB をテキストに効率よく変換</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    <link rel="shortcut icon" href="assets/favicon.ico">
+    <title>epub2txt - EPUBをテキストに変換</title>
     <link rel="alternate" hreflang="en" href="https://spacesoda.github.io/epub2txt/index.html" />
     <link rel="alternate" hreflang="zh-TW" href="https://spacesoda.github.io/epub2txt/zh.html" />
     <link rel="alternate" hreflang="ja" href="https://spacesoda.github.io/epub2txt/ja.html" />
     <!-- SEO Meta Tags -->
-    <meta name="description" content="EPUB ファイルを一括でクリーンなプレーンテキストに変換する強力な Python スクリプト。段落間に空行を追加し、フォルダごとの処理もサポート。オープンソースで無料です。">
+    <meta name="description" content="EPUBファイルを一括で、クリーンなプレーンテキストに変換する強力なPythonスクリプト。段落間に空行を追加し、フォルダごとの処理もサポート。オープンソースで無料です。">
     <meta name="keywords" content="epub txt 変換, epub コンバーター, python スクリプト, 一括処理, 電子書籍 変換, テキスト抽出, オープンソース ツール">
     <meta name="author" content="SPACESODA">
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://spacesoda.github.io/epub2txt/ja.html">
-    <meta property="og:title" content="epub2txt - EPUB を効率よくテキストに変換">
+    <meta property="og:title" content="epub2txt - EPUBを効率よくテキストに変換">
     <meta property="og:description" content="電子書籍をスマートな整形と無駄のない構成で一括してテキストに変換します。大規模なライブラリの処理に最適です。">
     <meta property="og:image" content="https://spacesoda.github.io/epub2txt/og-image.png">
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://spacesoda.github.io/epub2txt/ja.html">
-    <meta property="twitter:title" content="epub2txt - EPUB を効率よくテキストに変換">
+    <meta property="twitter:title" content="epub2txt - EPUBを効率よくテキストに変換">
     <meta property="twitter:description" content="電子書籍をスマートな整形と無駄のない構成で一括してテキストに変換します。">
     <!-- Fonts & Styles -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <!-- Umami Analytics -->
     <script defer src="https://cloud.umami.is/script.js" data-website-id="8771ed9f-edd3-4665-bf16-1bc95940af08"></script>
     <!-- JSZip & Custom Script -->
@@ -56,8 +60,8 @@
         </header>
 
         <section class="hero">
-            <h1>epub2txt で<br>EPUB をテキストに効率変換</h1>
-            <p>EPUB ファイルを一括で、読みやすく整えられたプレーンテキスト (TXT) に変換する、強力なオープンソース Python スクリプト。
+            <h1>epub2txt で<br>EPUBをテキストに効率よく変換</h1>
+            <p>EPUBファイルを一括で、読みやすく整えられたプレーンテキスト（TXT）に変換する、強力なオープンソースPythonスクリプト。
             </p>
             <div class="hero-buttons">
                 <a href="https://github.com/SPACESODA/epub2txt" class="cta-button primary" data-umami-event="Get Script Button">スクリプトを入手</a>
@@ -69,17 +73,17 @@
             <div class="feature-card">
                 <div class="icon">⚡️</div>
                 <h3>超高速</h3>
-                <p>数百冊の本を数秒で効率的に処理し、RAM をほとんど消費しません。</p>
+                <p>数百冊の本を数秒で効率的に処理し、メモリ（RAM）をほとんど消費しません。</p>
             </div>
             <div class="feature-card">
                 <div class="icon">📂</div>
                 <h3>一括処理</h3>
-                <p>単一ファイル、ファイルリスト、またはフォルダ全体の本を一つのコマンドで変換できます。</p>
+                <p>単一ファイル、複数ファイル、またはフォルダ内のEPUBを、1つのコマンドでまとめて変換できます。</p>
             </div>
             <div class="feature-card">
                 <div class="icon">✨</div>
                 <h3>自動整形</h3>
-                <p>構造を自動的に保持し、快適な読書体験のために適切な間隔を追加します。</p>
+                <p>章立てなどの構造をなるべく保ち、読みやすいように適度な空行を追加します。</p>
             </div>
         </section>
 
@@ -98,7 +102,7 @@
                 <div class="code-content">
                     <span class="prompt">$</span> <span class="cmd">./run.sh</span> <span class="arg">/Books/SciFi/</span> <span class="arg">/Books/History/</span><br>
                     <span class="comment"># フォルダをスキャン中: /Books/SciFi/</span><br>
-                    <span class="comment"># 12 個の EPUB を発見。</span><br>
+                    <span class="comment"># EPUBが12冊見つかりました。</span><br>
                     <span class="comment"># ...</span>
                 </div>
             </div>
@@ -106,12 +110,12 @@
 
         <section id="app" class="converter-section">
             <h2>オンラインで変換</h2>
-            <p class="section-intro">Python スクリプトと同じロジックを使用し、ブラウザ内で安全に実行されます。一度に1つのファイルを変換します。</p>
+            <p class="section-intro">Pythonスクリプトと同じロジックで、ブラウザ内で安全に処理します（1回につき1ファイル）。</p>
             <div class="converter-card">
                 <div id="drop-zone" class="drop-zone">
                     <div class="drop-content">
                         <div class="icon">📂</div>
-                        <h2>EPUB をここにドラッグ＆ドロップ</h2>
+                        <h2>ここにEPUBをドラッグ＆ドロップ</h2>
                         <p>またはクリックしてファイルを選択</p>
                         <input type="file" id="file-input" accept=".epub" hidden>
                     </div>
@@ -122,11 +126,11 @@
                     <div id="success-state" class="hidden">
                         <div class="icon success">✅</div>
                         <h2 id="success-filename">book.txt</h2>
-                        <button id="download-btn" class="cta-button primary" data-umami-event="Download TXT Button">TXT をダウンロード</button>
+                        <button id="download-btn" class="cta-button primary" data-umami-event="Download TXT Button">TXTをダウンロード</button>
                     </div>
                     <div id="error-state" class="hidden">
                         <div class="icon error">⚠️</div>
-                        <p id="error-msg">.epub ファイルのみサポートされています。</p>
+                        <p id="error-msg">.epubファイルのみ対応しています。</p>
                         <button id="retry-btn" class="cta-button secondary">もう一度試す</button>
                     </div>
                 </div>

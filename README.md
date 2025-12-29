@@ -1,10 +1,10 @@
 # epub2txt
 
-**epub2txt** — A robust, efficient Python script to convert EPUB files to clean, readable plain text (TXT).
+**epub2txt** — A robust, efficient Python script to convert EPUB files to clean, readable, and LLM-friendly plain text (TXT).
 
-**epub2txt** — EPUB ファイルをクリーンで読みやすいプレーンテキスト (TXT) に変換する、堅牢で効率的な Python スクリプト。
+**epub2txt** — EPUB ファイルをクリーンで読みやすく、LLMにも適したプレーンテキスト (TXT) に変換する、堅牢で効率的な Python スクリプト。
 
-**epub2txt** 是一個強大且高效的 Python 腳本，用於將 EPUB 檔案轉換為清晰易讀的純文字 (TXT)。
+**epub2txt** 是一個強大且高效的 Python 腳本，用於將 EPUB 檔案轉換為清晰易讀且適合 LLM 使用的純文字 (TXT)。
 
 <br>
 

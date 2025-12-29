@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Safety limits
-    const MAX_FILE_SIZE_MB = 2048; // Effective no-limit (browser crash risk only)
+    const MAX_FILE_SIZE_MB = 1024; // Effective no-limit (browser crash risk only)
     const MAX_CHAPTER_FILES = 3000; // Avoid pathological spine sizes
 
     const ERRORS = {
@@ -13,12 +13,12 @@ document.addEventListener('DOMContentLoaded', () => {
             invalidOpf: "Invalid EPUB: OPF file is missing required sections."
         },
         ja: {
-            tooLarge: (size) => `ファイルサイズが大きすぎます。${size}MB 未満の EPUB を使用してください。`,
-            tooManyFiles: "EPUB に含まれるコンテンツファイルが多すぎるため、安全に処理できません。",
-            noContent: "EPUB 内に読み取り可能な HTML/XHTML コンテンツが見つかりません。",
-            missingOpf: "無効な EPUB です: container.xml で宣言された OPF ファイルが見つかりません。",
-            invalidEpub: "無効な EPUB/ZIP ファイルです。",
-            invalidOpf: "無効な EPUB です: OPF ファイルに必要なセクションが欠落しています。"
+            tooLarge: (size) => `ファイルサイズが大きすぎます。${size}MB未満のEPUBを使用してください。`,
+            tooManyFiles: "EPUBに含まれるコンテンツファイルが多すぎるため、安全に処理できません。",
+            noContent: "EPUB内に読み取り可能なHTML/XHTMLコンテンツが見つかりません。",
+            missingOpf: "無効なEPUBです: container.xmlで指定されたOPFファイルが見つかりません。",
+            invalidEpub: "無効なEPUB/ZIPファイルです。",
+            invalidOpf: "無効なEPUBです: OPFファイルに必要なセクションが欠落しています。"
         },
         zh: {
             tooLarge: (size) => `檔案過大，請使用小於 ${size}MB 的 EPUB。`,
@@ -29,6 +29,16 @@ document.addEventListener('DOMContentLoaded', () => {
             invalidOpf: "無效的 EPUB: OPF 檔案缺少必要的區段。"
         }
     };
+
+    const BLOCK_TAGS = new Set([
+        'P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+        'LI', 'UL', 'OL', 'DL', 'DT', 'DD',
+        'TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'TD', 'TH',
+        'ARTICLE', 'SECTION', 'MAIN', 'HEADER', 'FOOTER', 'NAV', 'ASIDE',
+        'BLOCKQUOTE', 'PRE', 'HR'
+    ]);
+
+    const PRE_TAGS = new Set(['PRE', 'CODE', 'SAMP', 'KBD', 'TT']);
 
     // UI Elements
     const dropZone = document.getElementById('drop-zone');
@@ -66,15 +76,15 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         ja: {
             processing: "処理中...",
-            unzipping: "解凍中...",
+            unzipping: "展開中...",
             readingStructure: "構造を読み込み中...",
             parsingChapters: "章を解析中...",
             extracting: "テキストを抽出中...",
-            extractingChapter: (current, total) => `章 ${current}/${total} を抽出中...`,
+            extractingChapter: (current, total) => `章${current}/${total}を抽出中...`,
             errorPrefix: "エラー: ",
-            onlyEpub: ".epub ファイルのみサポートされています。",
+            onlyEpub: ".epubファイルのみ対応しています。",
             genericError: "予期しないエラーが発生しました。",
-            convertAnother: "別の .epub ファイルをドラッグして変換",
+            convertAnother: "別のEPUBをドラッグして変換",
             selectFile: "ファイルを選択"
         },
         zh: {
@@ -214,9 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Footer (Localization neutral or keep English?) 
-        // Let's keep a consistent footer
-        fullText += "File converted using epub2txt Web App\nhttps://github.com/SPACESODA/epub2txt";
+        fullText += "File converted using epub2txt\nhttps://github.com/SPACESODA/epub2txt\n";
 
         // 5. Prepare Download
         const resultFilename = file.name.replace(/\.epub$/i, '.txt');
@@ -225,15 +233,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Helpers ---
 
+    function safeDecodeURIComponent(value) {
+        try {
+            return decodeURIComponent(value);
+        } catch {
+            return value;
+        }
+    }
+
+    function normalizeZipPath(path) {
+        const parts = path.replace(/\\/g, '/').split('/');
+        const stack = [];
+        for (const part of parts) {
+            if (!part || part === '.') {
+                continue;
+            }
+            if (part === '..') {
+                if (stack.length) stack.pop();
+                continue;
+            }
+            stack.push(part);
+        }
+        return stack.join('/');
+    }
+
+    function resolveZipPath(opfDir, href) {
+        const cleaned = href.split('#')[0];
+        if (!cleaned) return null;
+        const combined = opfDir ? `${opfDir}/${cleaned}` : cleaned;
+        return normalizeZipPath(combined);
+    }
+
+    function findFirstOpfPath(zip) {
+        const opfFiles = zip.file(/\.opf$/i);
+        if (opfFiles.length > 0) {
+            return opfFiles[0].name;
+        }
+        return null;
+    }
+
     async function getRootFilePath(zip) {
-        const container = await zip.file("META-INF/container.xml").async("string");
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(container, "application/xml");
+        const containerFile = zip.file("META-INF/container.xml");
+        if (containerFile) {
+            const container = await containerFile.async("string");
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(container, "application/xml");
 
-        const rootfile = doc.querySelector("rootfile");
-        if (!rootfile) throw makeError('missingOpf');
+            const rootfile = doc.querySelector("rootfile");
+            const fullPath = rootfile?.getAttribute("full-path");
+            if (fullPath) return fullPath;
+        }
 
-        return rootfile.getAttribute("full-path");
+        const fallbackPath = findFirstOpfPath(zip);
+        if (fallbackPath) return fallbackPath;
+
+        throw makeError('missingOpf');
     }
 
     async function parseOPF(zip, opfPath) {
@@ -268,15 +322,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 3. Resolve paths relative to OPF
-        const opfDir = opfPath.substring(0, opfPath.lastIndexOf('/'));
+        const lastSlash = opfPath.lastIndexOf('/');
+        const opfDir = lastSlash !== -1 ? opfPath.slice(0, lastSlash) : '';
 
-        return spineHrefs.map(href => {
-            href = decodeURIComponent(href);
-            if (opfDir) {
-                return opfDir + "/" + href;
-            }
-            return href;
-        });
+        return spineHrefs
+            .map(href => resolveZipPath(opfDir, safeDecodeURIComponent(href)))
+            .filter(Boolean);
     }
 
     function extractTextFromHTML(htmlString) {
@@ -287,51 +338,74 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.querySelectorAll(tag).forEach(el => el.remove());
         });
 
-        return getTextWithNewlines(doc.body);
+        const root = doc.body || doc.documentElement || doc;
+        const segments = collectTextSegments(root);
+        return normalizeExtractedText(segments);
     }
 
-    function getTextWithNewlines(element) {
-        let text = "";
+    function normalizeExtractedText(segments) {
+        const output = [];
+        const normalBuffer = [];
 
-        if (!element) return "";
+        const flushNormal = () => {
+            if (!normalBuffer.length) return;
+            let text = normalBuffer.join('');
+            text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            text = text.replace(/[ \t\f\v]+/g, ' ');
+            text = text.replace(/ *\n */g, '\n');
+            text = text.replace(/\n{3,}/g, '\n\n');
+            output.push(text);
+            normalBuffer.length = 0;
+        };
 
-        element.childNodes.forEach(node => {
-            if (node.nodeType === Node.TEXT_NODE) {
-                // Mimic 'strip=True': trim whitespace, but be careful with inline spacing?
-                // Actually, 'get_text(strip=True)' removes ALL surrounding whitespace of individual text nodes.
-                // If we want "clean", trimming is good.
-                const content = node.textContent.trim();
-                if (content) {
-                    text += content;
-                }
-            } else if (node.nodeType === Node.ELEMENT_NODE) {
-                const tagName = node.tagName;
-
-                // Comprehensive list of block-level elements to ensure separation
-                const isBlock = [
-                    'P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
-                    'LI', 'TR', 'TD', 'TH', 'ARTICLE', 'SECTION', 'MAIN',
-                    'HEADER', 'FOOTER', 'BLOCKQUOTE', 'PRE', 'HR'
-                ].includes(tagName);
-
-                const isBr = tagName === 'BR';
-
-                // Block Start
-                if (isBlock) text += "\n";
-
-                text += getTextWithNewlines(node);
-
-                // Block End
-                if (isBlock) text += "\n";
-
-                // Explicit Line Break
-                // Note: Python get_text(separator='\n\n') turns everything into double newlines.
-                // Here, <br> adds one newline. 
-                if (isBr) text += "\n";
+        segments.forEach(segment => {
+            if (segment.pre) {
+                flushNormal();
+                const preText = segment.text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                output.push(preText);
+            } else {
+                normalBuffer.push(segment.text);
             }
         });
 
-        return text;
+        flushNormal();
+        let combined = output.join('');
+        combined = combined.replace(/^\n+/, '').replace(/\n+$/, '');
+        return combined;
+    }
+
+    function collectTextSegments(element, inPre = false, segments = []) {
+        if (!element) return segments;
+
+        element.childNodes.forEach(node => {
+            if (node.nodeType === Node.TEXT_NODE) {
+                const content = inPre ? node.textContent : node.textContent.replace(/\s+/g, ' ');
+                if (content) {
+                    segments.push({ text: content, pre: inPre });
+                }
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const tagName = node.tagName;
+                if (tagName === 'BR') {
+                    segments.push({ text: "\n", pre: inPre });
+                    return;
+                }
+
+                const isBlock = BLOCK_TAGS.has(tagName);
+                const nextPre = inPre || PRE_TAGS.has(tagName);
+
+                if (isBlock && !inPre) {
+                    segments.push({ text: "\n", pre: false });
+                }
+
+                collectTextSegments(node, nextPre, segments);
+
+                if (isBlock && !inPre) {
+                    segments.push({ text: "\n", pre: false });
+                }
+            }
+        });
+
+        return segments;
     }
 
     function prepareDownload(text, filename) {

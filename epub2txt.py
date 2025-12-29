@@ -14,12 +14,15 @@ import zipfile
 import xml.etree.ElementTree as ET
 import urllib.parse
 import shlex
+import re
+import posixpath
 from typing import List
 
 # Graceful import handling for BeautifulSoup
 # Wraps this in a try-except block to provide an error message if the user hasn't installed the required 'beautifulsoup4' library yet.
 try:
     from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
+    from bs4.element import NavigableString, Tag
     import warnings
     # Suppress warnings about parsing XML as HTML (common in EPUBs)
     # EPUBs often use XHTML which can trigger benign warnings in BeautifulSoup.
@@ -40,6 +43,18 @@ NAMESPACES = {
     'pkg': 'http://www.idpf.org/2007/opf',
     'dc': 'http://purl.org/dc/elements/1.1/'
 }
+
+BLOCK_TAGS = {
+    'p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'li', 'ul', 'ol', 'dl', 'dt', 'dd',
+    'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th',
+    'article', 'section', 'main', 'header', 'footer', 'nav', 'aside',
+    'blockquote', 'pre', 'hr'
+}
+
+PRE_TAGS = {'pre', 'code', 'samp', 'kbd', 'tt'}
+
+SKIP_TAGS = {'script', 'style', 'title', 'meta', 'noscript'}
 
 def get_epub_rootfile(zip_ref: zipfile.ZipFile) -> str:
     """
@@ -105,17 +120,19 @@ def parse_opf(zip_ref: zipfile.ZipFile, opf_path: str) -> List[str]:
     # 3. Resolve paths relative to the OPF file location
     # Sometimes the OPF file is inside a subdirectory (e.g., 'OEBPS/content.opf').
     # Prepends that directory to the file paths to find them in the zip.
-    opf_dir = os.path.dirname(opf_path)
+    opf_dir = posixpath.dirname(opf_path)
     full_paths = []
     for href in spine_hrefs:
         # Decode URL-encoded characters (like %20 for spaces)
         href = urllib.parse.unquote(href)
-        
+        href = href.split('#', 1)[0]
+        if not href:
+            continue
+
         if opf_dir:
-            # Join paths safely and ensure forward slashes for zip compatibility
-            path = os.path.join(opf_dir, href).replace('\\', '/') 
+            path = posixpath.normpath(posixpath.join(opf_dir, href))
         else:
-            path = href
+            path = posixpath.normpath(href)
         full_paths.append(path)
         
     return full_paths
@@ -154,7 +171,7 @@ def epub_to_text(epub_path: str, output_txt_path: str) -> None:
                     if f.lower().endswith(('.html', '.htm', '.xhtml'))
                 )
                 print("Warning: No spine found; falling back to HTML file order in archive")
-                print("警告: 未找到 spine；改為依壓縮檔中 HTML 檔案順序處理")
+                print("警告: 未找到 spine; 改為依壓縮檔中 HTML 檔案順序處理")
 
             if not ordered_files:
                 raise ValueError("No readable HTML/XHTML content found in EPUB\n在 EPUB 中找不到可讀的 HTML/XHTML 內容")
@@ -185,13 +202,12 @@ def epub_to_text(epub_path: str, output_txt_path: str) -> None:
                         # Remove non-content elements that are not desired in the text file
                         # script/style = code
                         # title/meta = invisible browser metadata
-                        for element in soup(['script', 'style', 'title', 'meta']):
+                        for element in soup(['script', 'style', 'title', 'meta', 'noscript']):
                             element.decompose()
                             
                         # Step 4: Extract text
-                        # separator='\n\n' adds a blank line between every paragraph or block for readability.
-                        # strip=True removes leading/trailing whitespace from the text logic.
-                        text = soup.get_text(separator='\n\n', strip=True)
+                        # Use our custom function to handle spacing intelligently
+                        text = get_clean_text(soup)
                         
                         if text:
                             # Write the cleaned text to our output file
@@ -209,13 +225,87 @@ def epub_to_text(epub_path: str, output_txt_path: str) -> None:
                         print(f"處理檔案出錯: {file_path} - {e}")
                 
                 # Append footer
-                txt_file.write("File converted using epub2txt.py\n")
+                txt_file.write("File converted using epub2txt\n")
                 txt_file.write("https://github.com/SPACESODA/epub2txt\n")
     except zipfile.BadZipFile as e:
         raise ValueError(f"Invalid EPUB/ZIP file: {e}\n無效的 EPUB/ZIP 檔案: {e}")
 
     print(f"Done! TXT file saved to: {output_txt_path}")
     print(f"完成! 文本已保存至: {output_txt_path}")
+
+def normalize_extracted_text(segments) -> str:
+    output = []
+    normal_buffer = []
+
+    def flush_normal():
+        if not normal_buffer:
+            return
+        text = "".join(normal_buffer)
+        text = text.replace('\r\n', '\n').replace('\r', '\n')
+        text = re.sub(r"[ \t\f\v]+", " ", text)
+        text = re.sub(r" *\n *", "\n", text)
+        text = re.sub(r"\n{3,}", "\n\n", text)
+        output.append(text)
+        normal_buffer.clear()
+
+    for text, is_pre in segments:
+        if is_pre:
+            flush_normal()
+            pre_text = text.replace('\r\n', '\n').replace('\r', '\n')
+            output.append(pre_text)
+        else:
+            normal_buffer.append(text)
+
+    flush_normal()
+    combined = "".join(output)
+    combined = re.sub(r"^\n+", "", combined)
+    combined = re.sub(r"\n+$", "", combined)
+    return combined
+
+def get_clean_text(soup: BeautifulSoup) -> str:
+    """
+    Extract text from BeautifulSoup object with intelligent whitespace handling.
+    Preserves sentence structure for LLMs while maintaining paragraph separation.
+    """
+    root = soup.body or soup
+    if not root:
+        return ""
+
+    def walk(node, in_pre: bool = False):
+        parts = []
+        for child in node.children:
+            if isinstance(child, NavigableString):
+                text = str(child)
+                if in_pre:
+                    if text:
+                        parts.append((text, True))
+                else:
+                    text = re.sub(r"\s+", " ", text)
+                    if text:
+                        parts.append((text, False))
+                continue
+
+            if isinstance(child, Tag):
+                name = child.name.lower()
+                if name in SKIP_TAGS:
+                    continue
+                if name == 'br':
+                    parts.append(("\n", in_pre))
+                    continue
+
+                is_block = name in BLOCK_TAGS
+                next_pre = in_pre or name in PRE_TAGS
+                if is_block and not in_pre:
+                    parts.append(("\n", False))
+
+                parts.extend(walk(child, next_pre))
+
+                if is_block and not in_pre:
+                    parts.append(("\n", False))
+        return parts
+
+    return normalize_extracted_text(walk(root))
+
 
 if __name__ == "__main__":
     # Setup command line arguments
@@ -322,8 +412,8 @@ if __name__ == "__main__":
             print(f"正在處理 ({count}/{total}): {os.path.basename(epub_path)}")
             epub_to_text(epub_path, output_path)
         except Exception as e:
-            print(f"Critical Error processing {epub_path}: {e}")
-            print(f"處理 {epub_path} 時發生嚴重錯誤: {e}")
+            print(f"Error processing {epub_path}: {e}")
+            print(f"處理 {epub_path} 時發生錯誤: {e}")
             # If processing only one file, exit with error code
             if total == 1:
                 sys.exit(1)

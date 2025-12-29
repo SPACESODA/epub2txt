@@ -1,10 +1,20 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# epub2txt.py
+#
+# Author: SPACESODA / ANTHONYC
+# GitHub: https://github.com/SPACESODA/epub2txt
+# License: MIT License
+
 import sys
 import os
 import argparse
 import zipfile
 import xml.etree.ElementTree as ET
 import urllib.parse
-from typing import List, Dict, Tuple
+import shlex
+from typing import List
 
 # Graceful import handling for BeautifulSoup
 # Wraps this in a try-except block to provide an error message if the user hasn't installed the required 'beautifulsoup4' library yet.
@@ -52,7 +62,7 @@ def get_epub_rootfile(zip_ref: zipfile.ZipFile) -> str:
         for name in zip_ref.namelist():
             if name.endswith('.opf'):
                 return name
-        raise ValueError("Could not locate OPF rootfile in EPUB\n無法在 EPUB 中找到 OPF 根文件")
+        raise ValueError("Could not locate OPF rootfile in EPUB\n無法在 EPUB 中找到 OPF 根檔案")
 
 def parse_opf(zip_ref: zipfile.ZipFile, opf_path: str) -> List[str]:
     """
@@ -77,6 +87,8 @@ def parse_opf(zip_ref: zipfile.ZipFile, opf_path: str) -> List[str]:
     for item in root.findall(".//pkg:manifest/pkg:item", ns):
         item_id = item.attrib.get('id')
         href = item.attrib.get('href')
+        if not item_id or not href:
+            continue
         manifest_items[item_id] = href
         
     # 2. Parse Spine: Get linear reading order
@@ -118,102 +130,137 @@ def epub_to_text(epub_path: str, output_txt_path: str) -> None:
     3. Reads one chapter at a time, extracts text, writes to disk, and forgets it.
     """
     if not os.path.exists(epub_path):
-        raise FileNotFoundError(f"Input file not found: {epub_path}\n找不到輸入文件: {epub_path}")
+        raise FileNotFoundError(f"Input file not found: {epub_path}\n找不到輸入檔案: {epub_path}")
 
     print(f"Opening: {epub_path}")
     print(f"正在打開: {epub_path}")
     
     # Open the EPUB file as a standard ZIP file
-    with zipfile.ZipFile(epub_path, 'r') as zip_ref:
-        try:
-            # Step 1: Find the structure file (OPF)
-            opf_path = get_epub_rootfile(zip_ref)
-            
-            # Step 2: Get the list of chapter files in the correct order
-            ordered_files = parse_opf(zip_ref, opf_path)
-        except Exception as e:
-            raise ValueError(f"Failed to parse EPUB structure: {e}\n解析 EPUB 結構失敗: {e}")
+    try:
+        with zipfile.ZipFile(epub_path, 'r') as zip_ref:
+            try:
+                # Step 1: Find the structure file (OPF)
+                opf_path = get_epub_rootfile(zip_ref)
+                
+                # Step 2: Get the list of chapter files in the correct order
+                ordered_files = parse_opf(zip_ref, opf_path)
+            except Exception as e:
+                raise ValueError(f"Failed to parse EPUB structure: {e}\n解析 EPUB 結構失敗: {e}")
 
-        print(f"Found {len(ordered_files)} chapters, extracting...")
-        print(f"找到 {len(ordered_files)} 個章節，正在提取...")
-        
-        # Open the output text file for writing
-        with open(output_txt_path, 'w', encoding='utf-8') as txt_file:
-            # Iterate through each file in the spine
-            for file_path in ordered_files:
-                try:
-                    # Read the raw bytes of the chapter from the zip
-                    content = zip_ref.read(file_path)
-                    
-                    # Check if file is HTML/XHTML based on extension
-                    # Skips images, CSS, and other non-text files here.
-                    if not (file_path.endswith('.html') or file_path.endswith('.xhtml') or file_path.endswith('.htm')):
-                         continue
+            if not ordered_files:
+                # Fallback: if spine is empty, grab HTML-ish files directly.
+                ordered_files = sorted(
+                    f for f in zip_ref.namelist()
+                    if f.lower().endswith(('.html', '.htm', '.xhtml'))
+                )
+                print("Warning: No spine found; falling back to HTML file order in archive")
+                print("警告: 未找到 spine；改為依壓縮檔中 HTML 檔案順序處理")
 
-                    # Step 3: Parse HTML using BeautifulSoup
-                    soup = BeautifulSoup(content, 'html.parser')
-                    
-                    # Remove non-content elements that are not desired in the text file
-                    # script/style = code
-                    # title/meta = invisible browser metadata
-                    for element in soup(['script', 'style', 'title', 'meta']):
-                        element.decompose()
-                        
-                    # Step 4: Extract text
-                    # separator='\n\n' adds a blank line between every paragraph or block.
-                    # This ensures "double spacing" which is much easier to read.
-                    # strip=True removes leading/trailing whitespace from the text logic.
-                    text = soup.get_text(separator='\n\n', strip=True)
-                    
-                    if text:
-                        # Write the cleaned text to our output file
-                        txt_file.write(text)
-                        
-                        # Add a visual separator between chapters
-                        txt_file.write("\n\n" + "-" * 20 + "\n\n") 
-                        
-                except KeyError:
-                    # This happens if the OPF lists a file that doesn't actually exist in the zip
-                    print(f"Missing file: {file_path}")
-                    print(f"缺少文件: {file_path}")
-                except Exception as e:
-                    print(f"Error processing: {file_path} - {e}")
-                    print(f"處理文件出錯: {file_path} - {e}")
+            if not ordered_files:
+                raise ValueError("No readable HTML/XHTML content found in EPUB\n在 EPUB 中找不到可讀的 HTML/XHTML 內容")
+
+            print(f"Found {len(ordered_files)} chapters/files, extracting...")
+            print(f"找到 {len(ordered_files)} 個章節/檔案，正在提取...")
             
-            # Append footer
-            txt_file.write("File converted using epub2txt.py\n")
-            txt_file.write("https://github.com/SPACESODA/epub2txt\n")
+            # Open the output text file for writing
+            output_dir = os.path.dirname(os.path.abspath(output_txt_path))
+            if output_dir:
+                os.makedirs(output_dir, exist_ok=True)
+            with open(output_txt_path, 'w', encoding='utf-8') as txt_file:
+                # Iterate through each file in the spine
+                for file_path in ordered_files:
+                    try:
+                        # Read the raw bytes of the chapter from the zip
+                        content = zip_ref.read(file_path)
+                        
+                        # Check if file is HTML/XHTML based on extension
+                        # Skips images, CSS, and other non-text files here.
+                        lower_path = file_path.lower()
+                        if not lower_path.endswith(('.html', '.xhtml', '.htm')):
+                            continue
+
+                        # Step 3: Parse HTML using BeautifulSoup
+                        soup = BeautifulSoup(content, 'html.parser')
+                        
+                        # Remove non-content elements that are not desired in the text file
+                        # script/style = code
+                        # title/meta = invisible browser metadata
+                        for element in soup(['script', 'style', 'title', 'meta']):
+                            element.decompose()
+                            
+                        # Step 4: Extract text
+                        # separator='\n\n' adds a blank line between every paragraph or block for readability.
+                        # strip=True removes leading/trailing whitespace from the text logic.
+                        text = soup.get_text(separator='\n\n', strip=True)
+                        
+                        if text:
+                            # Write the cleaned text to our output file
+                            txt_file.write(text)
+                            
+                            # Add a visual separator between chapters
+                            txt_file.write("\n\n" + "-" * 20 + "\n\n") 
+                            
+                    except KeyError:
+                        # This happens if the OPF lists a file that doesn't actually exist in the zip
+                        print(f"Missing file: {file_path}")
+                        print(f"缺少檔案: {file_path}")
+                    except Exception as e:
+                        print(f"Error processing: {file_path} - {e}")
+                        print(f"處理檔案出錯: {file_path} - {e}")
+                
+                # Append footer
+                txt_file.write("File converted using epub2txt.py\n")
+                txt_file.write("https://github.com/SPACESODA/epub2txt\n")
+    except zipfile.BadZipFile as e:
+        raise ValueError(f"Invalid EPUB/ZIP file: {e}\n無效的 EPUB/ZIP 檔案: {e}")
 
     print(f"Done! TXT file saved to: {output_txt_path}")
     print(f"完成! 文本已保存至: {output_txt_path}")
 
 if __name__ == "__main__":
     # Setup command line arguments
-    parser = argparse.ArgumentParser(description="Convert Large EPUB files to TXT efficiently 將大型 EPUB 文件高效轉換為 TXT")
-    parser.add_argument("epub_paths", nargs='*', help="File or Folder path(s) containing EPUBs EPUB 文件或文件夾路徑")
-    parser.add_argument("-o", "--output", help="Path to the output TXT file (optional, single file only) 輸出 TXT 文件路徑 (可選，僅限單文件)")
+    parser = argparse.ArgumentParser(description="Convert Large EPUB files to TXT efficiently / 將大型 EPUB 檔案高效轉換為 TXT")
+    parser.add_argument("epub_paths", nargs='*', help="File or Folder path(s) containing EPUBs / EPUB 檔案或資料夾路徑")
+    parser.add_argument("-o", "--output", help="Path to the output TXT file (optional, single file only) / 輸出 TXT 檔案路徑 (可選，僅限單檔案)")
 
     args = parser.parse_args()
     
     # Interactive mode: If no arguments provided, ask user for input
     if not args.epub_paths:
-        print("Tip: You can drag and drop a file here / 提示: 您可以將文件拖放到這裡")
-        print("Please enter the path to an EPUB file or folder:")
-        print("請輸入 EPUB 文件或文件夾的路徑:")
+        print("Tip: You can drag and drop a file here")
+        print("提示: 您可以將檔案拖放到這裡")
+        print("Please enter the path to EPUB file(s) or folder(s):")
+        print("請輸入 EPUB 檔案或資料夾的路徑:")
         p = input("> ").strip()
-        
-        # Handle common drag-and-drop formatting (quotes and escapes)
-        if p.startswith("'") and p.endswith("'"):
-            p = p[1:-1]
-        elif p.startswith('"') and p.endswith('"'):
-            p = p[1:-1]
-        # Fix escaped spaces from terminal
-        p = p.replace(r'\ ', ' ')
-        
+
         if p:
-            args.epub_paths = [p]
+            # Use shlex to correctly parse shell-style arguments
+            # posix=True (default) handles escaping for Mac/Linux (e.g. \ )
+            # posix=False is needed for Windows to preserve backslashes in paths
+            use_posix = (os.name != 'nt')
+            
+            try:
+                args.epub_paths = shlex.split(p, posix=use_posix)
+                
+                # Windows Quirk: shlex in non-posix mode does not strip quotes automatically
+                # This often happens when dragging multiple files, where Windows surrounds EVERY path with quotes.
+                if not use_posix:
+                    cleaned_paths = []
+                    for path in args.epub_paths:
+                        # Strip matching outer quotes cleanly
+                        if path.startswith('"') and path.endswith('"'):
+                            path = path[1:-1]
+                        elif path.startswith("'") and path.endswith("'"):
+                            path = path[1:-1]
+                        cleaned_paths.append(path)
+                    args.epub_paths = cleaned_paths
+                    
+            except ValueError:
+                # Fallback: Treat as single literal string if parsing fails
+                args.epub_paths = [p]
         else:
-            print("No path entered / 未輸入路徑")
+            print("No path entered")
+            print("未輸入路徑")
             sys.exit(0)
     
     # Step 1: Expand folders into a list of specific files
@@ -223,7 +270,7 @@ if __name__ == "__main__":
         if os.path.isdir(path):
             # It's a folder: Scan for .epub files (one level deep, no recursion)
             print(f"Scanning folder: {path}")
-            print(f"正在掃描文件夾: {path}")
+            print(f"正在掃描資料夾: {path}")
             try:
                 folder_epubs = [
                     os.path.join(path, f) 
@@ -231,15 +278,15 @@ if __name__ == "__main__":
                     if f.lower().endswith('.epub')
                 ]
                 if not folder_epubs:
-                     print(f"  No EPUB files found in: {path}")
-                     print(f"  找不到 EPUB 文件: {path}")
+                    print(f"  No EPUB files found in: {path}")
+                    print(f"  找不到 EPUB 檔案: {path}")
                 else:
-                     print(f"  Found {len(folder_epubs)} EPUBs.")
-                     print(f"  找到 {len(folder_epubs)} EPUBs.")
+                    print(f"  Found {len(folder_epubs)} EPUBs.")
+                    print(f"  找到 {len(folder_epubs)} EPUBs.")
                 files_to_process.extend(folder_epubs)
             except Exception as e:
                 print(f"  Error reading folder: {e}")
-                print(f"  讀取文件夾出錯: {e}")
+                print(f"  讀取資料夾出錯: {e}")
         else:
             # It's a file (or invalid path), add it directly
             files_to_process.append(path)
@@ -249,13 +296,13 @@ if __name__ == "__main__":
             
     if not files_to_process:
         print("No files to process")
-        print("無法處理的文件")
+        print("無法處理的檔案")
         sys.exit(0)
 
     # Validation: Cannot use -o with multiple files
     if len(files_to_process) > 1 and args.output:
         print("Error: Cannot use -o argument with multiple input files")
-        print("錯誤: 不能對多個輸入文件使用 -o 參數")
+        print("錯誤: 不能對多個輸入檔案使用 -o 參數")
         sys.exit(1)
 
     # Process files
@@ -283,4 +330,4 @@ if __name__ == "__main__":
         
         # Divider
         if count < total:
-             print("-" * 40)
+            print("-" * 40)

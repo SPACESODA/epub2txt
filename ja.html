@@ -11,23 +11,23 @@
     <link rel="shortcut icon" href="assets/favicon.ico">
     <title>epub2txt - EPUBをテキストに変換</title>
     <link rel="alternate" hreflang="en" href="https://spacesoda.github.io/epub2txt/index.html" />
-    <link rel="alternate" hreflang="zh-TW" href="https://spacesoda.github.io/epub2txt/zh.html" />
     <link rel="alternate" hreflang="ja" href="https://spacesoda.github.io/epub2txt/ja.html" />
+    <link rel="alternate" hreflang="zh-TW" href="https://spacesoda.github.io/epub2txt/zh.html" />
     <!-- SEO Meta Tags -->
-    <meta name="description" content="EPUBファイルを一括で、クリーンでLLMにも適したプレーンテキストに変換する強力なPythonスクリプト。段落間に空行を追加し、フォルダごとの処理もサポート。オープンソースで無料です。">
-    <meta name="keywords" content="epub txt 変換, epub コンバーター, python スクリプト, 一括処理, 電子書籍 変換, テキスト抽出, オープンソース ツール">
+    <meta name="description" content="強力なPythonスクリプトでEPUBを一括して読みやすいプレーンテキストに変換。段落間の空行追加とフォルダ処理に対応し、LLMでも扱いやすい出力。">
+    <meta name="keywords" content="EPUB テキスト 変換, EPUB 変換, Python スクリプト, 一括変換, 電子書籍 変換, テキスト 抽出, オープンソース ツール">
     <meta name="author" content="SPACESODA">
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://spacesoda.github.io/epub2txt/ja.html">
     <meta property="og:title" content="epub2txt - EPUBを効率よくテキストに変換">
-    <meta property="og:description" content="電子書籍をスマートな整形と無駄のない構成で一括してテキストに変換します。LLMにも適しており、大規模なライブラリの処理に最適です。">
+    <meta property="og:description" content="電子書籍をLLMでも使いやすいプレーンテキストに一括変換。自動整形と低メモリで、大規模ライブラリにも対応。">
     <meta property="og:image" content="https://spacesoda.github.io/epub2txt/og-image.png">
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://spacesoda.github.io/epub2txt/ja.html">
     <meta property="twitter:title" content="epub2txt - EPUBを効率よくテキストに変換">
-    <meta property="twitter:description" content="電子書籍をスマートな整形と無駄のない構成で一括してテキストに変換します。LLMにも適しています。">
+    <meta property="twitter:description" content="電子書籍をLLMでも使いやすいプレーンテキストに一括変換。自動整形と低メモリ。">
     <!-- Fonts & Styles -->
     <link rel="stylesheet" href="css/style.css">
     <!-- Umami Analytics -->
@@ -61,11 +61,10 @@
 
         <section class="hero">
             <h1>epub2txt で<br>EPUBをテキストに効率よく変換</h1>
-            <p>EPUBファイルを一括で、読みやすく整えられたLLMにも適したプレーンテキスト(TXT)に変換する、強力なオープンソースPythonスクリプト。
-            </p>
+            <p>EPUBファイルを一括で、読みやすく整えられたLLMにも適したプレーンテキスト(TXT)に変換する、強力なオープンソースPythonスクリプト。</p>
             <div class="hero-buttons">
-                <a href="https://github.com/SPACESODA/epub2txt" class="cta-button primary" data-umami-event="Get Script Button">スクリプトを入手</a>
-                <a href="#app" class="cta-button secondary" data-umami-event="Go to Converter Button">オンラインで変換</a>
+                <a href="https://github.com/SPACESODA/epub2txt" class="cta-button primary" data-umami-event="epub | Get Script Button">スクリプトを入手</a>
+                <a href="#app" class="cta-button secondary" data-umami-event="epub | Go to Converter Button">オンラインで変換</a>
             </div>
         </section>
 
@@ -125,7 +124,7 @@
                     <div id="success-state" class="hidden">
                         <div class="icon success">✅</div>
                         <h2 id="success-filename">book.txt</h2>
-                        <button id="download-btn" class="cta-button primary" data-umami-event="Download TXT Button">TXTをダウンロード</button>
+                        <button id="download-btn" class="cta-button primary" data-umami-event="epub | Download TXT Button">TXTをダウンロード</button>
                     </div>
                     <div id="error-state" class="hidden">
                         <div class="icon error">⚠️</div>

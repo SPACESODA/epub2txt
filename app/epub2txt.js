@@ -497,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         successFilename.textContent = filename;
         downloadBtn.textContent = downloadType === 'zip' ? T.downloadZip : T.downloadTxt;
-        downloadBtn.setAttribute('data-umami-event', downloadType === 'zip' ? 'Download ZIP Button' : 'Download TXT Button');
+        downloadBtn.setAttribute('data-umami-event', downloadType === 'zip' ? 'epub | Download ZIP Button' : 'epub | Download TXT Button');
         downloadBtn.onclick = (e) => {
             e.stopPropagation();
             const link = document.createElement("a");
@@ -532,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Track successful conversion
         if (window.umami) {
-            umami.track('File Converted');
+            umami.track('epub | File Converted');
         }
     }
 

@@ -11,22 +11,23 @@
     <link rel="shortcut icon" href="assets/favicon.ico">
     <title>epub2txt - EPUB 轉 TXT 工具</title>
     <link rel="alternate" hreflang="en" href="https://spacesoda.github.io/epub2txt/index.html" />
+    <link rel="alternate" hreflang="ja" href="https://spacesoda.github.io/epub2txt/ja.html" />
     <link rel="alternate" hreflang="zh-TW" href="https://spacesoda.github.io/epub2txt/zh.html" />
     <!-- SEO Meta Tags -->
-    <meta name="description" content="一個強大的 Python 腳本，用於將 EPUB 檔案批量轉換為清晰且適合 LLM 使用的純文字。自動在段落間加入空行並支援資料夾處理。開源且免費。">
-    <meta name="keywords" content="epub 轉 txt, epub 轉換器, python 腳本, 批量處理, 電子書格式轉換, 文本提取, 開源工具">
+    <meta name="description" content="強大的 Python 腳本，可批次將 EPUB 轉成乾淨易讀的純文字。支援段落空行與資料夾處理，適合 LLM 使用。">
+    <meta name="keywords" content="EPUB 轉 TXT, EPUB 轉換器, Python 腳本, 批次處理, 電子書 轉換, 文字擷取, 開源工具">
     <meta name="author" content="SPACESODA">
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://spacesoda.github.io/epub2txt/zh.html">
     <meta property="og:title" content="epub2txt - 高效將 EPUB 轉換為純文字">
-    <meta property="og:description" content="批量將電子書轉換為文本，具有智能排版且零內存負擔。處理大型圖書館的高效且適合 LLM 使用的方式。">
+    <meta property="og:description" content="批次將電子書轉為適合 LLM 使用的純文字，自動排版且記憶體用量低，適合處理大型書庫。">
     <meta property="og:image" content="https://spacesoda.github.io/epub2txt/og-image.png">
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://spacesoda.github.io/epub2txt/zh.html">
     <meta property="twitter:title" content="epub2txt - 高效將 EPUB 轉換為純文字">
-    <meta property="twitter:description" content="批量將電子書轉換為文本，具有智能排版且零內存負擔。適合 LLM 使用。">
+    <meta property="twitter:description" content="批次將電子書轉為適合 LLM 使用的純文字，自動排版、記憶體用量低。">
     <!-- Fonts & Styles -->
     <link rel="stylesheet" href="css/style.css">
     <!-- Umami Analytics -->
@@ -62,8 +63,8 @@
             <h1>使用 epub2txt<br>將 EPUB 高效地轉為純文字</h1>
             <p>這是一個強大的開源 Python 腳本，可將整個電子書庫批量轉換為清晰、易讀且適合 LLM 使用的純文字 (TXT)。</p>
             <div class="hero-buttons">
-                <a href="https://github.com/SPACESODA/epub2txt" class="cta-button primary" data-umami-event="Get Script Button">前往腳本</a>
-                <a href="#app" class="cta-button secondary" data-umami-event="Go to Converter Button">線上轉換</a>
+                <a href="https://github.com/SPACESODA/epub2txt" class="cta-button primary" data-umami-event="epub | Get Script Button">前往腳本</a>
+                <a href="#app" class="cta-button secondary" data-umami-event="epub | Go to Converter Button">線上轉換</a>
             </div>
         </section>
 
@@ -123,7 +124,7 @@
                     <div id="success-state" class="hidden">
                         <div class="icon success">✅</div>
                         <h2 id="success-filename">book.txt</h2>
-                        <button id="download-btn" class="cta-button primary" data-umami-event="Download TXT Button">下載 TXT</button>
+                        <button id="download-btn" class="cta-button primary" data-umami-event="epub | Download TXT Button">下載 TXT</button>
                     </div>
                     <div id="error-state" class="hidden">
                         <div class="icon error">⚠️</div>

@@ -16,7 +16,6 @@ import urllib.parse
 import shlex
 import re
 import posixpath
-from typing import List
 
 # Graceful import handling for BeautifulSoup
 # Wraps this in a try-except block to provide an error message if the user hasn't installed the required 'beautifulsoup4' library yet.
@@ -28,10 +27,9 @@ try:
     # EPUBs often use XHTML which can trigger benign warnings in BeautifulSoup.
     warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 except ImportError:
-    print("Error: Required library 'beautifulsoup4' is not installed")
-    print("錯誤: 必需的 'beautifulsoup4' 庫尚未安裝")
-    print("Tip: Use the helper script to auto-install dependencies:")
-    print("提示: 使用輔助腳本自動安裝依賴項:")
+    print("Error: Required library 'beautifulsoup4' is not installed. You may use the helper script to auto-install dependencies:")
+    print("エラー: 必要なライブラリ 'beautifulsoup4' がインストールされていません。依存関係を自動インストールするには、ヘルパースクリプトを使うこともできます:")
+    print("錯誤: 必需的 'beautifulsoup4' 庫尚未安裝。您可以使用輔助腳本自動安裝依賴項:")
     print("Mac/Linux: ./run.sh ")
     print("Windows: run.bat ")
     sys.exit(1)
@@ -56,6 +54,37 @@ PRE_TAGS = {'pre', 'code', 'samp', 'kbd', 'tt'}
 
 SKIP_TAGS = {'script', 'style', 'title', 'meta', 'noscript'}
 
+HEADING_TAGS = {
+    'h1': 1,
+    'h2': 2,
+    'h3': 3,
+    'h4': 4,
+    'h5': 5,
+    'h6': 6
+}
+MAX_HEADING_LEVEL = 5
+ANCHOR_MARKER_TAG = 'epub2txt-sep'
+
+def resolve_zip_path(base_dir: str, href: str) -> str:
+    if not href:
+        return ""
+    href = urllib.parse.unquote(href)
+    href = href.split('#', 1)[0]
+    if not href:
+        return ""
+    if base_dir:
+        return posixpath.normpath(posixpath.join(base_dir, href))
+    return posixpath.normpath(href)
+
+def split_toc_href(base_dir: str, href: str):
+    if not href:
+        return "", ""
+    path_part, _, fragment = href.partition('#')
+    path = resolve_zip_path(base_dir, path_part)
+    fragment = urllib.parse.unquote(fragment) if fragment else ""
+    return path, fragment
+
+
 def get_epub_rootfile(zip_ref: zipfile.ZipFile) -> str:
     """
     Read META-INF/container.xml to find the path of the .opf file.
@@ -77,12 +106,16 @@ def get_epub_rootfile(zip_ref: zipfile.ZipFile) -> str:
         for name in zip_ref.namelist():
             if name.endswith('.opf'):
                 return name
-        raise ValueError("Could not locate OPF rootfile in EPUB\n無法在 EPUB 中找到 OPF 根檔案")
+        raise ValueError(
+            "Could not locate OPF rootfile in EPUB\n"
+            "EPUB 内に OPF のルートファイルが見つかりません\n"
+            "無法在 EPUB 中找到 OPF 根檔案"
+        )
 
-def parse_opf(zip_ref: zipfile.ZipFile, opf_path: str) -> List[str]:
+def parse_opf(zip_ref: zipfile.ZipFile, opf_path: str):
     """
     Parse the OPF file to determine the reading order (spine) of the book.
-    Returns a list of file paths (inside the zip) in strict reading order.
+    Returns the spine file paths and the TOC file path (if found).
     
     The OPF file has two critical sections:
     1. <manifest>: Lists ALL files in the book (images, styles, chapters).
@@ -99,23 +132,33 @@ def parse_opf(zip_ref: zipfile.ZipFile, opf_path: str) -> List[str]:
     # 1. Parse Manifest: Map ID -> Href (File Path)
     # Creates a dictionary where valid IDs point to their actual file locations.
     manifest_items = {}
+    nav_href = None
+    ncx_href = None
     for item in root.findall(".//pkg:manifest/pkg:item", ns):
         item_id = item.attrib.get('id')
         href = item.attrib.get('href')
         if not item_id or not href:
             continue
+        properties = item.attrib.get('properties', '')
+        if properties and 'nav' in properties.split():
+            nav_href = href
+        media_type = item.attrib.get('media-type', '')
+        if media_type == 'application/x-dtbncx+xml':
+            ncx_href = href
         manifest_items[item_id] = href
         
     # 2. Parse Spine: Get linear reading order
     # The spine tells the parser the order in which to display the items found in the manifest.
     spine_hrefs = []
-    for itemref in root.findall(".//pkg:spine/pkg:itemref", ns):
-        item_id = itemref.attrib.get('idref')
-        
-        # Verify the ID exists in the manifest before adding it
-        if item_id in manifest_items:
-            href = manifest_items[item_id]
-            spine_hrefs.append(href)
+    spine = root.find(".//pkg:spine", ns)
+    if spine is not None:
+        toc_id = spine.attrib.get('toc')
+        if toc_id and toc_id in manifest_items:
+            ncx_href = manifest_items[toc_id]
+        for itemref in spine.findall(".//pkg:itemref", ns):
+            item_id = itemref.attrib.get('idref')
+            if item_id in manifest_items:
+                spine_hrefs.append(manifest_items[item_id])
             
     # 3. Resolve paths relative to the OPF file location
     # Sometimes the OPF file is inside a subdirectory (e.g., 'OEBPS/content.opf').
@@ -123,19 +166,144 @@ def parse_opf(zip_ref: zipfile.ZipFile, opf_path: str) -> List[str]:
     opf_dir = posixpath.dirname(opf_path)
     full_paths = []
     for href in spine_hrefs:
-        # Decode URL-encoded characters (like %20 for spaces)
-        href = urllib.parse.unquote(href)
-        href = href.split('#', 1)[0]
-        if not href:
-            continue
+        path = resolve_zip_path(opf_dir, href)
+        if path:
+            full_paths.append(path)
 
-        if opf_dir:
-            path = posixpath.normpath(posixpath.join(opf_dir, href))
-        else:
-            path = posixpath.normpath(href)
-        full_paths.append(path)
-        
-    return full_paths
+    toc_href = nav_href or ncx_href
+    toc_path = resolve_zip_path(opf_dir, toc_href) if toc_href else None
+
+    return full_paths, toc_path
+
+def parse_nav_toc_entries(nav_content: str, toc_dir: str):
+    soup = BeautifulSoup(nav_content, 'html.parser')
+    nav = (
+        soup.find('nav', attrs={'epub:type': 'toc'})
+        or soup.find('nav', attrs={'role': 'doc-toc'})
+        or soup.find('nav')
+    )
+    if not nav:
+        return []
+    list_root = nav.find(['ol', 'ul'])
+    if not list_root:
+        return []
+
+    entries = []
+
+    def walk_list(list_tag, depth):
+        for li in list_tag.find_all('li', recursive=False):
+            link = li.find('a', href=True)
+            if link:
+                title = " ".join(link.get_text(" ", strip=True).split())
+                path, fragment = split_toc_href(toc_dir, link.get('href'))
+                if path:
+                    entries.append({'path': path, 'fragment': fragment, 'title': title, 'depth': depth})
+            child_list = li.find(['ol', 'ul'], recursive=False)
+            if child_list:
+                walk_list(child_list, depth + 1)
+
+    walk_list(list_root, 1)
+    return entries
+
+def parse_ncx_toc_entries(ncx_content: str, toc_dir: str):
+    try:
+        root = ET.fromstring(ncx_content)
+    except ET.ParseError:
+        return []
+
+    def local_name(elem):
+        return elem.tag.split('}')[-1]
+
+    def child_by_local_name(elem, name):
+        for child in list(elem):
+            if local_name(child) == name:
+                return child
+        return None
+
+    entries = []
+
+    def walk_nav_point(nav_point, depth):
+        content = child_by_local_name(nav_point, 'content')
+        src = content.attrib.get('src') if content is not None else ''
+        nav_label = child_by_local_name(nav_point, 'navLabel')
+        title = ""
+        if nav_label is not None:
+            text_el = child_by_local_name(nav_label, 'text')
+            if text_el is not None and text_el.text:
+                title = text_el.text.strip()
+        path, fragment = split_toc_href(toc_dir, src)
+        if path:
+            entries.append({'path': path, 'fragment': fragment, 'title': title, 'depth': depth})
+        for child in list(nav_point):
+            if local_name(child) == 'navPoint':
+                walk_nav_point(child, depth + 1)
+
+    nav_map = None
+    for elem in root.iter():
+        if local_name(elem) == 'navMap':
+            nav_map = elem
+            break
+
+    if nav_map is None:
+        return entries
+
+    for child in list(nav_map):
+        if local_name(child) == 'navPoint':
+            walk_nav_point(child, 1)
+
+    return entries
+
+def parse_toc_entries(zip_ref: zipfile.ZipFile, toc_path: str):
+    if not toc_path:
+        return []
+    try:
+        toc_content = zip_ref.read(toc_path)
+    except KeyError:
+        return []
+
+    toc_dir = posixpath.dirname(toc_path)
+    if toc_path.lower().endswith('.ncx'):
+        return parse_ncx_toc_entries(toc_content, toc_dir)
+    return parse_nav_toc_entries(toc_content, toc_dir)
+
+def select_toc_chapter_anchors(entries):
+    if not entries:
+        return {}
+
+    anchors = {}
+    for entry in entries:
+        if entry.get('depth') != 1:
+            continue
+        path = entry.get('path') or ''
+        fragment = entry.get('fragment') or ''
+        if not path.lower().endswith(('.html', '.htm', '.xhtml')):
+            continue
+        if not fragment:
+            continue
+        path = posixpath.normpath(path)
+        anchor_list = anchors.setdefault(path, [])
+        if fragment not in anchor_list:
+            anchor_list.append(fragment)
+    return anchors
+
+def insert_anchor_markers(soup: BeautifulSoup, anchor_ids):
+    if not anchor_ids:
+        return
+    seen_targets = set()
+    for anchor_id in anchor_ids:
+        if not anchor_id:
+            continue
+        target = soup.find(id=anchor_id) or soup.find(attrs={'name': anchor_id})
+        if not target:
+            continue
+        heading_target = target.find_parent(list(HEADING_TAGS.keys()))
+        target = heading_target or target
+        target_key = id(target)
+        if target_key in seen_targets:
+            continue
+        seen_targets.add(target_key)
+        marker = soup.new_tag(ANCHOR_MARKER_TAG)
+        target.insert_before(marker)
 
 def epub_to_text(epub_path: str, output_txt_path: str) -> None:
     """
@@ -147,9 +315,14 @@ def epub_to_text(epub_path: str, output_txt_path: str) -> None:
     3. Reads one chapter at a time, extracts text, writes to disk, and forgets it.
     """
     if not os.path.exists(epub_path):
-        raise FileNotFoundError(f"Input file not found: {epub_path}\n找不到輸入檔案: {epub_path}")
+        raise FileNotFoundError(
+            f"Input file not found: {epub_path}\n"
+            f"入力ファイルが見つかりません: {epub_path}\n"
+            f"找不到輸入檔案: {epub_path}"
+        )
 
     print(f"Opening: {epub_path}")
+    print(f"開いています: {epub_path}")
     print(f"正在打開: {epub_path}")
     
     # Open the EPUB file as a standard ZIP file
@@ -160,9 +333,13 @@ def epub_to_text(epub_path: str, output_txt_path: str) -> None:
                 opf_path = get_epub_rootfile(zip_ref)
                 
                 # Step 2: Get the list of chapter files in the correct order
-                ordered_files = parse_opf(zip_ref, opf_path)
+                ordered_files, toc_path = parse_opf(zip_ref, opf_path)
             except Exception as e:
-                raise ValueError(f"Failed to parse EPUB structure: {e}\n解析 EPUB 結構失敗: {e}")
+                raise ValueError(
+                    f"Failed to parse EPUB structure: {e}\n"
+                    f"EPUB 構造の解析に失敗しました: {e}\n"
+                    f"解析 EPUB 結構失敗: {e}"
+                )
 
             if not ordered_files:
                 # Fallback: if spine is empty, grab HTML-ish files directly.
@@ -171,12 +348,21 @@ def epub_to_text(epub_path: str, output_txt_path: str) -> None:
                     if f.lower().endswith(('.html', '.htm', '.xhtml'))
                 )
                 print("Warning: No spine found; falling back to HTML file order in archive")
+                print("警告: spine が見つからないため、アーカイブ内の HTML ファイル順で処理します")
                 print("警告: 未找到 spine; 改為依壓縮檔中 HTML 檔案順序處理")
 
             if not ordered_files:
-                raise ValueError("No readable HTML/XHTML content found in EPUB\n在 EPUB 中找不到可讀的 HTML/XHTML 內容")
+                raise ValueError(
+                    "No readable HTML/XHTML content found in EPUB\n"
+                    "EPUB 内に読み取り可能な HTML/XHTML コンテンツが見つかりません\n"
+                    "在 EPUB 中找不到可讀的 HTML/XHTML 內容"
+                )
+
+            toc_entries = parse_toc_entries(zip_ref, toc_path)
+            chapter_anchors = select_toc_chapter_anchors(toc_entries)
 
             print(f"Found {len(ordered_files)} chapters/files, extracting...")
+            print(f"章またはファイルを {len(ordered_files)} 件検出しました。抽出中...")
             print(f"找到 {len(ordered_files)} 個章節/檔案，正在提取...")
             
             # Open the output text file for writing
@@ -185,6 +371,10 @@ def epub_to_text(epub_path: str, output_txt_path: str) -> None:
                 os.makedirs(output_dir, exist_ok=True)
             with open(output_txt_path, 'w', encoding='utf-8') as txt_file:
                 # Iterate through each file in the spine
+                wrote_content = False
+                last_was_separator = False
+                chapter_separator = "\n\n---\n\n"
+
                 for file_path in ordered_files:
                     try:
                         # Read the raw bytes of the chapter from the zip
@@ -207,30 +397,43 @@ def epub_to_text(epub_path: str, output_txt_path: str) -> None:
                             
                         # Step 4: Extract text
                         # Use our custom function to handle spacing intelligently
+                        normalized_path = posixpath.normpath(file_path)
+                        anchor_ids = chapter_anchors.get(normalized_path, [])
+                        insert_anchor_markers(soup, anchor_ids)
                         text = get_clean_text(soup)
                         
-                        if text:
-                            # Write the cleaned text to our output file
+                        if text.strip():
                             txt_file.write(text)
-                            
-                            # Add a visual separator between chapters
-                            txt_file.write("\n\n" + "-" * 20 + "\n\n") 
+                            wrote_content = True
+                            last_was_separator = False
+                            txt_file.write(chapter_separator)
+                            last_was_separator = True
                             
                     except KeyError:
                         # This happens if the OPF lists a file that doesn't actually exist in the zip
                         print(f"Missing file: {file_path}")
+                        print(f"見つからないファイル: {file_path}")
                         print(f"缺少檔案: {file_path}")
                     except Exception as e:
                         print(f"Error processing: {file_path} - {e}")
+                        print(f"処理中にエラーが発生しました: {file_path} - {e}")
                         print(f"處理檔案出錯: {file_path} - {e}")
                 
                 # Append footer
+                if not last_was_separator:
+                    txt_file.write("\n\n")
                 txt_file.write("File converted using epub2txt\n")
                 txt_file.write("https://github.com/SPACESODA/epub2txt\n")
+                txt_file.write("\n")
     except zipfile.BadZipFile as e:
-        raise ValueError(f"Invalid EPUB/ZIP file: {e}\n無效的 EPUB/ZIP 檔案: {e}")
+        raise ValueError(
+            f"Invalid EPUB file: {e}\n"
+            f"無効な EPUB ファイルです: {e}\n"
+            f"無效的 EPUB 檔案: {e}"
+        )
 
     print(f"Done! TXT file saved to: {output_txt_path}")
+    print(f"完了! TXT ファイルを保存しました: {output_txt_path}")
     print(f"完成! 文本已保存至: {output_txt_path}")
 
 def normalize_extracted_text(segments) -> str:
@@ -271,56 +474,92 @@ def get_clean_text(soup: BeautifulSoup) -> str:
     if not root:
         return ""
 
+    parts = []
+    state = {'has_content': False, 'last_sep': False}
+
+    def add_text(text: str, is_pre: bool, is_content: bool = False):
+        if not text:
+            return
+        parts.append((text, is_pre))
+        if is_content:
+            state['has_content'] = True
+            state['last_sep'] = False
+
+    def add_separator():
+        if state['has_content'] and not state['last_sep']:
+            parts.append(("\n\n---\n\n", False))
+            state['last_sep'] = True
+
     def walk(node, in_pre: bool = False):
-        parts = []
         for child in node.children:
             if isinstance(child, NavigableString):
                 text = str(child)
                 if in_pre:
                     if text:
-                        parts.append((text, True))
+                        add_text(text, True, is_content=bool(text.strip()))
                 else:
                     text = re.sub(r"\s+", " ", text)
                     if text:
-                        parts.append((text, False))
+                        add_text(text, False, is_content=bool(text.strip()))
                 continue
 
             if isinstance(child, Tag):
                 name = child.name.lower()
                 if name in SKIP_TAGS:
                     continue
-                if name == 'br':
-                    parts.append(("\n", in_pre))
+                if name == ANCHOR_MARKER_TAG:
+                    add_separator()
                     continue
+                if name == 'br':
+                    add_text("\n", in_pre)
+                    continue
+                heading_level = HEADING_TAGS.get(name)
+                if heading_level and not in_pre:
+                    heading_text = child.get_text(" ", strip=True)
+                    if heading_text:
+                        add_text("\n", False)
+                        level = min(heading_level, MAX_HEADING_LEVEL)
+                        add_text("#" * level + " " + heading_text, False, is_content=True)
+                        add_text("\n", False)
+                        continue
 
                 is_block = name in BLOCK_TAGS
                 next_pre = in_pre or name in PRE_TAGS
                 if is_block and not in_pre:
-                    parts.append(("\n", False))
+                    add_text("\n", False)
 
-                parts.extend(walk(child, next_pre))
+                walk(child, next_pre)
 
                 if is_block and not in_pre:
-                    parts.append(("\n", False))
-        return parts
+                    add_text("\n", False)
 
-    return normalize_extracted_text(walk(root))
+    walk(root)
+    return normalize_extracted_text(parts)
 
 
 if __name__ == "__main__":
     # Setup command line arguments
-    parser = argparse.ArgumentParser(description="Convert Large EPUB files to TXT efficiently / 將大型 EPUB 檔案高效轉換為 TXT")
-    parser.add_argument("epub_paths", nargs='*', help="File or Folder path(s) containing EPUBs / EPUB 檔案或資料夾路徑")
-    parser.add_argument("-o", "--output", help="Path to the output TXT file (optional, single file only) / 輸出 TXT 檔案路徑 (可選，僅限單檔案)")
+    parser = argparse.ArgumentParser(
+        description="Convert Large EPUB files to TXT efficiently / 大型 EPUB ファイルを効率的に TXT に変換 / 將大型 EPUB 檔案高效轉換為 TXT"
+    )
+    parser.add_argument(
+        "epub_paths",
+        nargs='*',
+        help="File or Folder path(s) containing EPUBs / EPUB ファイルまたはフォルダのパス / EPUB 檔案或資料夾路徑"
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="Path to the output TXT file (optional, single file only) / 出力 TXT ファイルのパス (任意、単一入力のみ) / 輸出 TXT 檔案路徑 (可選，僅限單檔案)"
+    )
 
     args = parser.parse_args()
     
     # Interactive mode: If no arguments provided, ask user for input
     if not args.epub_paths:
-        print("Tip: You can drag and drop a file here")
-        print("提示: 您可以將檔案拖放到這裡")
-        print("Please enter the path to EPUB file(s) or folder(s):")
-        print("請輸入 EPUB 檔案或資料夾的路徑:")
+        print("Drag and drop EPUB files or folders here, or type the path below:")
+        print("ここに EPUB ファイル／フォルダをドラッグ＆ドロップするか、下にパスを入力してください:")
+        print("請將 EPUB 檔案或資料夾拖放到這裡，或在下方輸入路徑:")
         p = input("> ").strip()
 
         if p:
@@ -350,6 +589,7 @@ if __name__ == "__main__":
                 args.epub_paths = [p]
         else:
             print("No path entered")
+            print("パスが入力されていません")
             print("未輸入路徑")
             sys.exit(0)
     
@@ -360,6 +600,7 @@ if __name__ == "__main__":
         if os.path.isdir(path):
             # It's a folder: Scan for .epub files (one level deep, no recursion)
             print(f"Scanning folder: {path}")
+            print(f"フォルダをスキャン中: {path}")
             print(f"正在掃描資料夾: {path}")
             try:
                 folder_epubs = [
@@ -369,13 +610,16 @@ if __name__ == "__main__":
                 ]
                 if not folder_epubs:
                     print(f"  No EPUB files found in: {path}")
+                    print(f"  EPUB ファイルが見つかりません: {path}")
                     print(f"  找不到 EPUB 檔案: {path}")
                 else:
                     print(f"  Found {len(folder_epubs)} EPUBs.")
+                    print(f"  EPUB を {len(folder_epubs)} 件見つけました。")
                     print(f"  找到 {len(folder_epubs)} EPUBs.")
                 files_to_process.extend(folder_epubs)
             except Exception as e:
                 print(f"  Error reading folder: {e}")
+                print(f"  フォルダの読み込み中にエラーが発生しました: {e}")
                 print(f"  讀取資料夾出錯: {e}")
         else:
             # It's a file (or invalid path), add it directly
@@ -386,12 +630,14 @@ if __name__ == "__main__":
             
     if not files_to_process:
         print("No files to process")
+        print("処理するファイルがありません")
         print("無法處理的檔案")
         sys.exit(0)
 
     # Validation: Cannot use -o with multiple files
     if len(files_to_process) > 1 and args.output:
         print("Error: Cannot use -o argument with multiple input files")
+        print("エラー: 複数入力では -o を使用できません")
         print("錯誤: 不能對多個輸入檔案使用 -o 參數")
         sys.exit(1)
 
@@ -409,10 +655,12 @@ if __name__ == "__main__":
 
         try:
             print(f"Processing ({count}/{total}): {os.path.basename(epub_path)}")
+            print(f"処理中 ({count}/{total}): {os.path.basename(epub_path)}")
             print(f"正在處理 ({count}/{total}): {os.path.basename(epub_path)}")
             epub_to_text(epub_path, output_path)
         except Exception as e:
             print(f"Error processing {epub_path}: {e}")
+            print(f"処理中にエラーが発生しました: {epub_path} - {e}")
             print(f"處理 {epub_path} 時發生錯誤: {e}")
             # If processing only one file, exit with error code
             if total == 1:

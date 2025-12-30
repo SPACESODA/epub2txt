@@ -39,6 +39,15 @@ document.addEventListener('DOMContentLoaded', () => {
     ]);
 
     const PRE_TAGS = new Set(['PRE', 'CODE', 'SAMP', 'KBD', 'TT']);
+    const HEADING_TAGS = {
+        H1: 1,
+        H2: 2,
+        H3: 3,
+        H4: 4,
+        H5: 5,
+        H6: 6
+    };
+    const MAX_HEADING_LEVEL = 5;
 
     // UI Elements
     const dropZone = document.getElementById('drop-zone');
@@ -233,7 +242,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 3. Parse OPF to get reading order (Spine)
         setStatus(T.parsingChapters, progressContext);
-        let chapterFiles = await parseOPF(zip, opfPath);
+        const opfData = await parseOPF(zip, opfPath);
+        let chapterFiles = opfData.spineHrefs;
+        const tocEntries = await parseTocEntries(zip, opfData.tocPath);
+        const chapterAnchors = selectChapterAnchors(tocEntries);
 
         // Fallback: if spine is empty, use HTML-like files in archive order
         if (!chapterFiles.length) {
@@ -251,7 +263,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // 4. Extract Text
         setStatus(T.extracting, progressContext);
         const output = [];
-        const separator = "\n\n" + "-".repeat(20) + "\n\n";
+        const separator = "\n\n---\n\n";
+        let wroteContent = false;
+        let lastWasSeparator = false;
 
         for (let i = 0; i < chapterFiles.length; i++) {
             const path = chapterFiles[i];
@@ -274,13 +288,23 @@ document.addEventListener('DOMContentLoaded', () => {
             // Basic progress update
             setStatus(T.extractingChapter(i + 1, chapterFiles.length), progressContext);
 
-            const text = extractTextFromHTML(content);
+            const normalizedPath = normalizeZipPath(path);
+            const anchorIds = chapterAnchors.get(normalizedPath) || [];
+            const text = extractTextFromHTML(content, anchorIds);
             if (text.trim()) {
-                output.push(text, separator);
+                output.push(text);
+                wroteContent = true;
+                lastWasSeparator = false;
+                output.push(separator);
+                lastWasSeparator = true;
             }
         }
 
+        if (!lastWasSeparator) {
+            output.push("\n\n");
+        }
         output.push("File converted using epub2txt\nhttps://github.com/SPACESODA/epub2txt\n");
+        output.push("\n");
 
         return output.join('');
     }
@@ -363,14 +387,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 1. Map Manifest: ID -> Href
         const manifestItems = {};
+        let navHref = null;
+        let ncxHref = null;
         const manifest = getFirstElementByLocalName(doc, 'manifest');
         if (!manifest) throw makeError('invalidOpf');
 
         getElementsByLocalName(manifest, 'item').forEach(item => {
             const id = item.getAttribute("id");
             const href = item.getAttribute("href");
+            const properties = item.getAttribute("properties") || '';
+            const mediaType = item.getAttribute("media-type") || '';
             if (id && href) {
                 manifestItems[id] = href;
+            }
+            if (href && properties.split(/\s+/).includes('nav')) {
+                navHref = href;
+            }
+            if (href && mediaType === 'application/x-dtbncx+xml') {
+                ncxHref = href;
             }
         });
 
@@ -378,6 +412,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const spine = getFirstElementByLocalName(doc, 'spine');
         const spineHrefs = [];
         if (spine) {
+            const tocId = spine.getAttribute("toc");
+            if (tocId && manifestItems[tocId]) {
+                ncxHref = manifestItems[tocId];
+            }
             getElementsByLocalName(spine, 'itemref').forEach(itemref => {
                 const idref = itemref.getAttribute("idref");
                 if (manifestItems[idref]) {
@@ -390,12 +428,143 @@ document.addEventListener('DOMContentLoaded', () => {
         const lastSlash = opfPath.lastIndexOf('/');
         const opfDir = lastSlash !== -1 ? opfPath.slice(0, lastSlash) : '';
 
-        return spineHrefs
+        const resolvedSpine = spineHrefs
             .map(href => resolveZipPath(opfDir, safeDecodeURIComponent(href)))
             .filter(Boolean);
+        const tocHref = navHref || ncxHref;
+        const tocPath = tocHref ? resolveZipPath(opfDir, safeDecodeURIComponent(tocHref)) : null;
+
+        return { spineHrefs: resolvedSpine, tocPath };
     }
 
-    function extractTextFromHTML(htmlString) {
+    function splitTocHref(tocDir, href) {
+        if (!href) return { path: null, fragment: '' };
+        const hashIndex = href.indexOf('#');
+        const pathPart = hashIndex === -1 ? href : href.slice(0, hashIndex);
+        const fragment = hashIndex === -1 ? '' : href.slice(hashIndex + 1);
+        const path = pathPart ? resolveZipPath(tocDir, safeDecodeURIComponent(pathPart)) : null;
+        return { path, fragment: fragment ? safeDecodeURIComponent(fragment) : '' };
+    }
+
+    function escapeAttributeValue(value) {
+        return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    }
+
+    function insertAnchorMarkers(doc, anchorIds) {
+        if (!anchorIds || !anchorIds.length) return;
+        const seenTargets = new Set();
+        anchorIds.forEach(anchorId => {
+            if (!anchorId) return;
+            let target = doc.getElementById(anchorId);
+            if (!target) {
+                const selector = `[name="${escapeAttributeValue(anchorId)}"]`;
+                target = doc.querySelector(selector);
+            }
+            if (!target) return;
+            const headingTarget = target.closest('h1,h2,h3,h4,h5,h6');
+            const markerTarget = headingTarget || target;
+            if (!markerTarget.parentNode || seenTargets.has(markerTarget)) return;
+            seenTargets.add(markerTarget);
+            const marker = doc.createElement('epub2txt-sep');
+            markerTarget.parentNode.insertBefore(marker, markerTarget);
+        });
+    }
+
+    async function parseTocEntries(zip, tocPath) {
+        if (!tocPath) return [];
+        const tocFile = zip.file(tocPath);
+        if (!tocFile) return [];
+        const tocContent = await tocFile.async("string");
+        const tocDir = tocPath.lastIndexOf('/') !== -1 ? tocPath.slice(0, tocPath.lastIndexOf('/')) : '';
+        if (tocPath.toLowerCase().endsWith('.ncx')) {
+            return parseNcxTocEntries(tocContent, tocDir);
+        }
+        return parseNavTocEntries(tocContent, tocDir);
+    }
+
+    function parseNavTocEntries(navContent, tocDir) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(navContent, "text/html");
+        const navs = Array.from(doc.querySelectorAll('nav'));
+        let tocNav = navs.find(nav => nav.getAttribute('epub:type') === 'toc' || nav.getAttribute('role') === 'doc-toc');
+        if (!tocNav && navs.length) {
+            tocNav = navs[0];
+        }
+        if (!tocNav) return [];
+        const listRoot = tocNav.querySelector('ol, ul');
+        if (!listRoot) return [];
+
+        const entries = [];
+        const walkList = (listEl, depth) => {
+            const items = Array.from(listEl.children).filter(el => el.tagName === 'LI');
+            items.forEach(li => {
+                const link = li.querySelector(':scope > a[href]') || li.querySelector('a[href]');
+                if (link) {
+                    const title = link.textContent.replace(/\s+/g, ' ').trim();
+                    const rawHref = link.getAttribute('href');
+                    const { path, fragment } = splitTocHref(tocDir, rawHref);
+                    if (path) {
+                        entries.push({ path, fragment, title, depth });
+                    }
+                }
+                const childList = li.querySelector(':scope > ol, :scope > ul');
+                if (childList) {
+                    walkList(childList, depth + 1);
+                }
+            });
+        };
+
+        walkList(listRoot, 1);
+        return entries;
+    }
+
+    function parseNcxTocEntries(ncxContent, tocDir) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(ncxContent, "application/xml");
+        const navMap = getFirstElementByLocalName(doc, 'navMap');
+        if (!navMap) return [];
+
+        const entries = [];
+        const walkNavPoints = (node, depth) => {
+            const navPoints = getChildElementsByLocalName(node, 'navPoint');
+            navPoints.forEach(point => {
+                const content = getFirstElementByLocalName(point, 'content');
+                const src = content ? content.getAttribute('src') : '';
+                const navLabel = getFirstElementByLocalName(point, 'navLabel');
+                const textEl = navLabel ? getFirstElementByLocalName(navLabel, 'text') : null;
+                const title = (textEl?.textContent || '').trim();
+                const { path, fragment } = splitTocHref(tocDir, src);
+                if (path) {
+                    entries.push({ path, fragment, title, depth });
+                }
+                walkNavPoints(point, depth + 1);
+            });
+        };
+
+        walkNavPoints(navMap, 1);
+        return entries;
+    }
+
+    function selectChapterAnchors(entries) {
+        if (!entries.length) return new Map();
+
+        const anchorsByPath = new Map();
+        entries.forEach(entry => {
+            if (entry.depth !== 1) return;
+            if (!entry.path || !entry.fragment) return;
+            const lower = entry.path.toLowerCase();
+            if (!lower.endsWith('.html') && !lower.endsWith('.htm') && !lower.endsWith('.xhtml')) return;
+            const path = normalizeZipPath(entry.path);
+            const list = anchorsByPath.get(path) || [];
+            if (!list.includes(entry.fragment)) {
+                list.push(entry.fragment);
+                anchorsByPath.set(path, list);
+            }
+        });
+        return anchorsByPath;
+    }
+
+    function extractTextFromHTML(htmlString, anchorIds = []) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlString, "text/html");
 
@@ -403,8 +572,10 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.querySelectorAll(tag).forEach(el => el.remove());
         });
 
+        insertAnchorMarkers(doc, anchorIds);
         const root = doc.body || doc.documentElement || doc;
-        const segments = collectTextSegments(root);
+        const state = { hasContent: false, lastWasSeparator: false };
+        const segments = collectTextSegments(root, false, [], state);
         return normalizeExtractedText(segments);
     }
 
@@ -439,33 +610,64 @@ document.addEventListener('DOMContentLoaded', () => {
         return combined;
     }
 
-    function collectTextSegments(element, inPre = false, segments = []) {
+    function collectTextSegments(element, inPre = false, segments = [], state = null) {
         if (!element) return segments;
+        if (!state) {
+            state = { hasContent: false, lastWasSeparator: false };
+        }
+
+        const pushSegment = (text, pre, isContent = false) => {
+            if (!text) return;
+            segments.push({ text, pre });
+            if (isContent) {
+                state.hasContent = true;
+                state.lastWasSeparator = false;
+            }
+        };
 
         element.childNodes.forEach(node => {
             if (node.nodeType === Node.TEXT_NODE) {
                 const content = inPre ? node.textContent : node.textContent.replace(/\s+/g, ' ');
                 if (content) {
-                    segments.push({ text: content, pre: inPre });
+                    pushSegment(content, inPre, Boolean(content.trim()));
                 }
             } else if (node.nodeType === Node.ELEMENT_NODE) {
                 const tagName = node.tagName;
-                if (tagName === 'BR') {
-                    segments.push({ text: "\n", pre: inPre });
+                if (tagName === 'EPUB2TXT-SEP') {
+                    if (state.hasContent && !state.lastWasSeparator) {
+                        segments.push({ text: "\n\n---\n\n", pre: false });
+                        state.lastWasSeparator = true;
+                    }
                     return;
+                }
+                if (tagName === 'BR') {
+                    pushSegment("\n", inPre);
+                    return;
+                }
+
+                const headingLevel = HEADING_TAGS[tagName];
+                if (headingLevel && !inPre) {
+                    const headingText = node.textContent.replace(/\s+/g, ' ').trim();
+                    if (headingText) {
+                        const level = Math.min(headingLevel, MAX_HEADING_LEVEL);
+                        pushSegment("\n", false);
+                        pushSegment(`${"#".repeat(level)} ${headingText}`, false, true);
+                        pushSegment("\n", false);
+                        return;
+                    }
                 }
 
                 const isBlock = BLOCK_TAGS.has(tagName);
                 const nextPre = inPre || PRE_TAGS.has(tagName);
 
                 if (isBlock && !inPre) {
-                    segments.push({ text: "\n", pre: false });
+                    pushSegment("\n", false);
                 }
 
-                collectTextSegments(node, nextPre, segments);
+                collectTextSegments(node, nextPre, segments, state);
 
                 if (isBlock && !inPre) {
-                    segments.push({ text: "\n", pre: false });
+                    pushSegment("\n", false);
                 }
             }
         });
@@ -484,6 +686,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return Array.from(node.getElementsByTagNameNS('*', localName));
         }
         return Array.from(node.getElementsByTagName(localName));
+    }
+
+    function getChildElementsByLocalName(node, localName) {
+        if (!node || !node.children) return [];
+        return Array.from(node.children).filter(child => child.localName === localName);
     }
 
     function getFirstElementByLocalName(node, localName) {

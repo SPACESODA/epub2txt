@@ -37,9 +37,6 @@ Automatically set up the environment and install dependencies.
     ```bash
     ./run.sh 
     ```
-    ```bash
-    ./run.sh /path/to/myBook.epub
-    ```
 
 #### Windows
 1. Open Command Prompt `cmd`.
@@ -50,9 +47,6 @@ Automatically set up the environment and install dependencies.
 3. Run the helper script:
     ```bat
     run.bat 
-    ```
-    ```bat
-    run.bat C:\path\to\myBook.epub
     ```
 
 ### Manual Installation
@@ -78,15 +72,9 @@ If you prefer to run it manually or don't want to use the helper scripts:
     # Mac / Linux
     python3 epub2txt.py 
     ```
-    ```bash
-    python3 epub2txt.py /path/to/myBook.epub
-    ```
     ```bat
     :: Windows
     python epub2txt.py 
-    ```
-    ```bat
-    python epub2txt.py C:\path\to\myBook.epub
     ```
 
 ### Usage Examples
@@ -94,7 +82,6 @@ If you prefer to run it manually or don't want to use the helper scripts:
 **Note**: Replace `./run.sh` with `run.bat` on Windows.
 
 **Custom Output Name**  
-(Single input only)  
 ```bash
 ./run.sh myBook.epub -o myBook001.txt
 ```
@@ -107,11 +94,6 @@ If you prefer to run it manually or don't want to use the helper scripts:
 **Multiple Files & Folders**  
 ```bash
 ./run.sh book1.epub /path/to/folder/ book2.epub
-```
-
-**Folder Processing**  
-```bash
-./run.sh /path/to/MyBooks/
 ```
 
 ### Notes
@@ -150,9 +132,7 @@ If you prefer to run it manually or don't want to use the helper scripts:
     ```bash
     ./run.sh 
     ```
-    ```bash
-    ./run.sh /path/to/myBook.epub
-    ```
+
 
 #### Windows
 1. コマンドプロンプト `cmd` を開きます。
@@ -164,9 +144,7 @@ If you prefer to run it manually or don't want to use the helper scripts:
     ```bat
     run.bat 
     ```
-    ```bat
-    run.bat C:\path\to\myBook.epub
-    ```
+
 
 ### 手動インストール
 
@@ -191,23 +169,19 @@ If you prefer to run it manually or don't want to use the helper scripts:
     # Mac / Linux
     python3 epub2txt.py 
     ```
-    ```bash
-    python3 epub2txt.py /path/to/myBook.epub
-    ```
+
     ```bat
     :: Windows
     python epub2txt.py 
     ```
-    ```bat
-    python epub2txt.py C:\path\to\myBook.epub
-    ```
+
 
 ### 使用例
 
 **注意**: Windows では `./run.sh` を `run.bat` に置き換えてください。
 
 **カスタム出力名**  
-(単一入力のみ)  
+
 ```bash
 ./run.sh myBook.epub -o myBook001.txt
 ```
@@ -222,10 +196,7 @@ If you prefer to run it manually or don't want to use the helper scripts:
 ./run.sh book1.epub /path/to/folder/ book2.epub
 ```
 
-**フォルダの処理**  
-```bash
-./run.sh /path/to/MyBooks/
-```
+
 
 ### 備考
 
@@ -263,9 +234,7 @@ If you prefer to run it manually or don't want to use the helper scripts:
     ```bash
     ./run.sh 
     ```
-    ```bash
-    ./run.sh /path/to/myBook.epub
-    ```
+
 
 #### Windows
 1. 打開命令提示字元 `cmd`。
@@ -277,9 +246,7 @@ If you prefer to run it manually or don't want to use the helper scripts:
     ```bat
     run.bat 
     ```
-    ```bat
-    run.bat C:\path\to\myBook.epub
-    ```
+
 
 ### 手動安裝
 
@@ -304,23 +271,19 @@ If you prefer to run it manually or don't want to use the helper scripts:
     # Mac / Linux
     python3 epub2txt.py 
     ```
-    ```bash
-    python3 epub2txt.py /path/to/myBook.epub
-    ```
+
     ```bat
     :: Windows
     python epub2txt.py 
     ```
-    ```bat
-    python epub2txt.py C:\path\to\myBook.epub
-    ```
+
 
 ### 用法示例
 
 **注意**: 在 Windows 上請將 `./run.sh` 替換為 `run.bat`。
 
 **自定義輸出名稱**  
-(僅適用單檔輸入)  
+
 ```bash
 ./run.sh myBook.epub -o myBook001.txt
 ```
@@ -335,10 +298,7 @@ If you prefer to run it manually or don't want to use the helper scripts:
 ./run.sh book1.epub /path/to/folder/ book2.epub
 ```
 
-**資料夾處理**  
-```bash
-./run.sh /path/to/MyBooks/
-```
+
 
 ### 備註
 

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cloud.umami.is https://cdnjs.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://spacesoda.github.io; connect-src 'self' https://cloud.umami.is; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cloud.umami.is https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://spacesoda.github.io; connect-src 'self' https://cloud.umami.is https://api-gateway.umami.dev; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
@@ -49,7 +49,7 @@
                     <span class="lang-separator">|</span>
                     <a href="zh.html" class="lang-switch active">中文</a>
                 </div>
-                <a href="https://github.com/SPACESODA/epub2txt" class="github-link">
+                <a href="https://github.com/SPACESODA/epub2txt" class="github-link" target="_blank" rel="noopener">
                     <span class="github-text">GitHub</span>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.655-3.795-1.275-3.795-1.275-.54-1.38-1.335-1.755-1.335-1.755-1.095-.75.075-.735.075-.735 1.215.09 1.845 1.245 1.845 1.245 1.08 1.86 2.835 1.32 3.525 1.005.105-.795.42-1.32.765-1.635-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405 1.02 0 2.04.135 3 .405 2.28-1.56 3.285-1.23 3.285-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.285 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
@@ -107,14 +107,14 @@
 
         <section id="app" class="converter-section">
             <h2>線上轉換</h2>
-            <p class="section-intro">採用與 Python 腳本相同的邏輯，安全地在你的瀏覽器執行轉換。每次只轉換一個檔案。</p>
+            <p class="section-intro">採用與 Python 腳本相同的邏輯，安全地在你的瀏覽器執行轉換。可轉換單一或多個檔案！</p>
             <div class="converter-card">
                 <div id="drop-zone" class="drop-zone">
                     <div class="drop-content">
                         <div class="icon">📂</div>
                         <h2>拖放 EPUB 檔案至此</h2>
-                        <p>或點擊選擇檔案</p>
-                        <input type="file" id="file-input" accept=".epub" hidden>
+                        <p>或點擊選擇</p>
+                        <input type="file" id="file-input" accept=".epub" multiple hidden>
                     </div>
                     <div id="loading-state" class="hidden">
                         <div class="spinner"></div>
@@ -139,7 +139,7 @@
     <footer>
         <div class="container">
             <p>&copy; SPACESODA / ANTHONYC<br>Released under the MIT License.</p>
-            <p class="footer-github"><a href="https://github.com/SPACESODA/epub2txt">GitHub Repository</a></p>
+            <p class="footer-github"><a href="https://github.com/SPACESODA/epub2txt" target="_blank" rel="noopener">⭐ 在 GitHub 給個星吧</a></p>
         </div>
     </footer>
 

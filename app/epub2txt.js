@@ -68,11 +68,16 @@ document.addEventListener('DOMContentLoaded', () => {
             parsingChapters: "Parsing chapters...",
             extracting: "Extracting text...",
             extractingChapter: (current, total) => `Extracting chapter ${current}/${total}...`,
+            packaging: "Packaging ZIP...",
+            processingFile: (current, total) => `File ${current}/${total}:`,
             errorPrefix: "Error: ",
             onlyEpub: "Only .epub files are supported.",
             genericError: "An unexpected error occurred.",
-            convertAnother: "Drag another .epub file to convert",
-            selectFile: "select file"
+            convertAnother: "Drag other .epub files to convert",
+            selectFile: "select file(s)",
+            downloadTxt: "Download TXT",
+            downloadZip: "Download ZIP",
+            fileError: (name, message) => `Failed to process "${name}": ${message}`
         },
         ja: {
             processing: "処理中...",
@@ -81,11 +86,16 @@ document.addEventListener('DOMContentLoaded', () => {
             parsingChapters: "章を解析中...",
             extracting: "テキストを抽出中...",
             extractingChapter: (current, total) => `章${current}/${total}を抽出中...`,
+            packaging: "ZIPを作成中...",
+            processingFile: (current, total) => `ファイル ${current}/${total}:`,
             errorPrefix: "エラー: ",
             onlyEpub: ".epubファイルのみ対応しています。",
             genericError: "予期しないエラーが発生しました。",
-            convertAnother: "別のEPUBをドラッグして変換",
-            selectFile: "ファイルを選択"
+            convertAnother: "他の .epub ファイルをドラッグして変換",
+            selectFile: "ファイルを選択",
+            downloadTxt: "TXTをダウンロード",
+            downloadZip: "ZIPをダウンロード",
+            fileError: (name, message) => `「${name}」の処理に失敗しました: ${message}`
         },
         zh: {
             processing: "處理中...",
@@ -94,11 +104,16 @@ document.addEventListener('DOMContentLoaded', () => {
             parsingChapters: "正在解析章節...",
             extracting: "正在提取文字...",
             extractingChapter: (current, total) => `正在提取章節 ${current}/${total}...`,
+            packaging: "正在打包 ZIP...",
+            processingFile: (current, total) => `檔案 ${current}/${total}:`,
             errorPrefix: "錯誤: ",
             onlyEpub: "請選擇 .epub 檔案。",
             genericError: "發生未預期的錯誤。",
             convertAnother: "拖放其他 .epub 檔案以轉換",
-            selectFile: "選擇檔案"
+            selectFile: "選擇檔案",
+            downloadTxt: "下載 TXT",
+            downloadZip: "下載 ZIP",
+            fileError: (name, message) => `「${name}」處理失敗: ${message}`
         }
     };
 
@@ -120,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         dropZone.classList.remove('drag-over');
         if (e.dataTransfer.files.length > 0) {
-            handleFile(e.dataTransfer.files[0]);
+            handleFiles(e.dataTransfer.files);
         }
     });
 
@@ -131,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
-            handleFile(e.target.files[0]);
+            handleFiles(e.target.files);
         }
     });
 
@@ -145,39 +160,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Core Logic ---
 
-    async function handleFile(file) {
-        if (!file.name.toLowerCase().endsWith('.epub')) {
+    async function handleFiles(fileList) {
+        const files = Array.from(fileList || []);
+        if (!files.length) return;
+        fileInput.value = '';
+
+        const invalidFile = files.find(file => !file.name.toLowerCase().endsWith('.epub'));
+        if (invalidFile) {
             showError(T.onlyEpub);
             return;
         }
 
-        if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+        const oversizedFile = files.find(file => file.size > MAX_FILE_SIZE_MB * 1024 * 1024);
+        if (oversizedFile) {
             showError(getErrorText('tooLarge'));
             return;
         }
 
+        safeRevokeBlob();
         showLoading();
 
         try {
-            await processEPUB(file);
+            if (files.length === 1) {
+                const text = await extractEPUBText(files[0]);
+                const resultFilename = files[0].name.replace(/\.epub$/i, '.txt');
+                prepareTextDownload(text, resultFilename);
+                return;
+            }
+
+            const zip = new JSZip();
+            const usedNames = new Set();
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                let text;
+                try {
+                    text = await extractEPUBText(file, { index: i, total: files.length });
+                } catch (err) {
+                    console.error(err);
+                    showError(T.fileError(file.name, normalizeError(err)));
+                    return;
+                }
+                const baseName = file.name.replace(/\.epub$/i, '.txt');
+                const entryName = makeUniqueFilename(baseName, usedNames);
+                usedNames.add(entryName);
+                zip.file(entryName, text);
+            }
+
+            statusText.textContent = T.packaging;
+            const zipBlob = await zip.generateAsync({
+                type: "blob",
+                compression: "DEFLATE",
+                compressionOptions: { level: 6 },
+                streamFiles: true
+            });
+            prepareBlobDownload(zipBlob, formatZipFilename(new Date()), 'zip');
         } catch (err) {
             console.error(err);
             showError(normalizeError(err));
         }
     }
 
-    async function processEPUB(file) {
-        statusText.textContent = T.unzipping;
+    async function extractEPUBText(file, progressContext = null) {
+        setStatus(T.unzipping, progressContext);
 
         // 1. Unzip
         const zip = await JSZip.loadAsync(file);
 
         // 2. Find Rootfile (OPF)
-        statusText.textContent = T.readingStructure;
+        setStatus(T.readingStructure, progressContext);
         const opfPath = await getRootFilePath(zip);
 
         // 3. Parse OPF to get reading order (Spine)
-        statusText.textContent = T.parsingChapters;
+        setStatus(T.parsingChapters, progressContext);
         let chapterFiles = await parseOPF(zip, opfPath);
 
         // Fallback: if spine is empty, use HTML-like files in archive order
@@ -194,8 +249,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 4. Extract Text
-        statusText.textContent = T.extracting;
-        let fullText = "";
+        setStatus(T.extracting, progressContext);
+        const output = [];
+        const separator = "\n\n" + "-".repeat(20) + "\n\n";
 
         for (let i = 0; i < chapterFiles.length; i++) {
             const path = chapterFiles[i];
@@ -216,22 +272,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Basic progress update
-            statusText.textContent = T.extractingChapter(i + 1, chapterFiles.length);
+            setStatus(T.extractingChapter(i + 1, chapterFiles.length), progressContext);
 
             const text = extractTextFromHTML(content);
             if (text.trim()) {
-                fullText += text + "\n\n" + "-".repeat(20) + "\n\n";
+                output.push(text, separator);
             }
         }
 
-        fullText += "File converted using epub2txt\nhttps://github.com/SPACESODA/epub2txt\n";
+        output.push("File converted using epub2txt\nhttps://github.com/SPACESODA/epub2txt\n");
 
-        // 5. Prepare Download
-        const resultFilename = file.name.replace(/\.epub$/i, '.txt');
-        prepareDownload(fullText, resultFilename);
+        return output.join('');
     }
 
     // --- Helpers ---
+    function setStatus(message, progressContext) {
+        if (progressContext && progressContext.total > 1) {
+            statusText.textContent = `${T.processingFile(progressContext.index + 1, progressContext.total)} ${message}`;
+            return;
+        }
+        statusText.textContent = message;
+    }
 
     function safeDecodeURIComponent(value) {
         try {
@@ -279,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const parser = new DOMParser();
             const doc = parser.parseFromString(container, "application/xml");
 
-            const rootfile = doc.querySelector("rootfile");
+            const rootfile = getFirstElementByLocalName(doc, 'rootfile');
             const fullPath = rootfile?.getAttribute("full-path");
             if (fullPath) return fullPath;
         }
@@ -302,18 +363,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 1. Map Manifest: ID -> Href
         const manifestItems = {};
-        const manifest = doc.getElementsByTagName("manifest")[0];
+        const manifest = getFirstElementByLocalName(doc, 'manifest');
         if (!manifest) throw makeError('invalidOpf');
 
-        Array.from(manifest.getElementsByTagName("item")).forEach(item => {
-            manifestItems[item.getAttribute("id")] = item.getAttribute("href");
+        getElementsByLocalName(manifest, 'item').forEach(item => {
+            const id = item.getAttribute("id");
+            const href = item.getAttribute("href");
+            if (id && href) {
+                manifestItems[id] = href;
+            }
         });
 
         // 2. Map Spine: IDREF -> Href
-        const spine = doc.getElementsByTagName("spine")[0];
+        const spine = getFirstElementByLocalName(doc, 'spine');
         const spineHrefs = [];
         if (spine) {
-            Array.from(spine.getElementsByTagName("itemref")).forEach(itemref => {
+            getElementsByLocalName(spine, 'itemref').forEach(itemref => {
                 const idref = itemref.getAttribute("idref");
                 if (manifestItems[idref]) {
                     spineHrefs.push(manifestItems[idref]);
@@ -408,12 +473,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return segments;
     }
 
-    function prepareDownload(text, filename) {
+    function prepareTextDownload(text, filename) {
         const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+        prepareBlobDownload(blob, filename, 'txt');
+    }
+
+    function getElementsByLocalName(node, localName) {
+        if (!node) return [];
+        if (node.getElementsByTagNameNS) {
+            return Array.from(node.getElementsByTagNameNS('*', localName));
+        }
+        return Array.from(node.getElementsByTagName(localName));
+    }
+
+    function getFirstElementByLocalName(node, localName) {
+        const elements = getElementsByLocalName(node, localName);
+        return elements.length ? elements[0] : null;
+    }
+
+    function prepareBlobDownload(blob, filename, downloadType) {
         safeRevokeBlob();
         currentBlobUrl = URL.createObjectURL(blob);
 
         successFilename.textContent = filename;
+        downloadBtn.textContent = downloadType === 'zip' ? T.downloadZip : T.downloadTxt;
+        downloadBtn.setAttribute('data-umami-event', downloadType === 'zip' ? 'Download ZIP Button' : 'Download TXT Button');
         downloadBtn.onclick = (e) => {
             e.stopPropagation();
             const link = document.createElement("a");
@@ -476,6 +560,30 @@ document.addEventListener('DOMContentLoaded', () => {
             URL.revokeObjectURL(currentBlobUrl);
             currentBlobUrl = null;
         }
+    }
+
+    function makeUniqueFilename(name, usedNames) {
+        if (!usedNames.has(name)) return name;
+        const dotIndex = name.lastIndexOf('.');
+        const base = dotIndex === -1 ? name : name.slice(0, dotIndex);
+        const ext = dotIndex === -1 ? '' : name.slice(dotIndex);
+        let counter = 2;
+        let candidate = `${base} (${counter})${ext}`;
+        while (usedNames.has(candidate)) {
+            counter += 1;
+            candidate = `${base} (${counter})${ext}`;
+        }
+        return candidate;
+    }
+
+    function formatZipFilename(date) {
+        const pad = (value) => String(value).padStart(2, '0');
+        const year = date.getFullYear();
+        const month = pad(date.getMonth() + 1);
+        const day = pad(date.getDate());
+        const hours = pad(date.getHours());
+        const minutes = pad(date.getMinutes());
+        return `txt_files_${year}${month}${day}_${hours}${minutes}.zip`;
     }
 
     function makeError(code, params = {}) {

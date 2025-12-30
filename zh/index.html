@@ -1,40 +1,40 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="zh-TW">
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cloud.umami.is https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://spacesoda.github.io; connect-src 'self' https://cloud.umami.is https://api-gateway.umami.dev; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
-    <link rel="shortcut icon" href="assets/favicon.ico">
-    <title>epub2txt - EPUBをテキストに変換</title>
-    <link rel="alternate" hreflang="en" href="https://spacesoda.github.io/epub2txt/index.html" />
-    <link rel="alternate" hreflang="ja" href="https://spacesoda.github.io/epub2txt/ja.html" />
-    <link rel="alternate" hreflang="zh-TW" href="https://spacesoda.github.io/epub2txt/zh.html" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+    <link rel="shortcut icon" href="../assets/favicon.ico">
+    <title>epub2txt - EPUB 轉 TXT 工具</title>
+    <link rel="alternate" hreflang="en" href="https://spacesoda.github.io/epub2txt/" />
+    <link rel="alternate" hreflang="ja" href="https://spacesoda.github.io/epub2txt/ja/" />
+    <link rel="alternate" hreflang="zh-TW" href="https://spacesoda.github.io/epub2txt/zh/" />
     <!-- SEO Meta Tags -->
-    <meta name="description" content="強力なPythonスクリプトでEPUBを一括して読みやすいプレーンテキストに変換。段落間の空行追加とフォルダ処理に対応し、LLMでも扱いやすい出力。">
-    <meta name="keywords" content="EPUB テキスト 変換, EPUB 変換, Python スクリプト, 一括変換, 電子書籍 変換, テキスト 抽出, オープンソース ツール">
+    <meta name="description" content="強大的 Python 腳本，可批次將 EPUB 轉成乾淨易讀的純文字。支援段落空行與資料夾處理，適合 LLM 使用。">
+    <meta name="keywords" content="EPUB 轉 TXT, EPUB 轉換器, Python 腳本, 批次處理, 電子書 轉換, 文字擷取, 開源工具">
     <meta name="author" content="SPACESODA">
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://spacesoda.github.io/epub2txt/ja.html">
-    <meta property="og:title" content="epub2txt - EPUBを効率よくテキストに変換">
-    <meta property="og:description" content="電子書籍をLLMでも使いやすいプレーンテキストに一括変換。自動整形と低メモリで、大規模ライブラリにも対応。">
+    <meta property="og:url" content="https://spacesoda.github.io/epub2txt/zh/">
+    <meta property="og:title" content="epub2txt - 高效將 EPUB 轉換為純文字">
+    <meta property="og:description" content="批次將電子書轉為適合 LLM 使用的純文字，自動排版且記憶體用量低，適合處理大型書庫。">
     <!-- <meta property="og:image" content=""> -->
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://spacesoda.github.io/epub2txt/ja.html">
-    <meta property="twitter:title" content="epub2txt - EPUBを効率よくテキストに変換">
-    <meta property="twitter:description" content="電子書籍をLLMでも使いやすいプレーンテキストに一括変換。自動整形と低メモリ。">
+    <meta property="twitter:url" content="https://spacesoda.github.io/epub2txt/zh/">
+    <meta property="twitter:title" content="epub2txt - 高效將 EPUB 轉換為純文字">
+    <meta property="twitter:description" content="批次將電子書轉為適合 LLM 使用的純文字，自動排版、記憶體用量低。">
     <!-- Fonts & Styles -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/style.css">
     <!-- Umami Analytics -->
     <script defer src="https://cloud.umami.is/script.js" data-website-id="8771ed9f-edd3-4665-bf16-1bc95940af08"></script>
     <!-- JSZip & Custom Script -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script defer src="app/epub2txt.js"></script>
+    <script defer src="../app/epub2txt.js"></script>
 </head>
 
 <body>
@@ -44,11 +44,11 @@
             <div class="logo">epub2txt</div>
             <div class="header-links">
                 <div class="lang-group">
-                    <a href="index.html" class="lang-switch">EN</a>
+                    <a href="../" class="lang-switch">EN</a>
                     <span class="lang-separator">|</span>
-                    <a href="ja.html" class="lang-switch active">JP</a>
+                    <a href="../ja/" class="lang-switch">JP</a>
                     <span class="lang-separator">|</span>
-                    <a href="zh.html" class="lang-switch">中文</a>
+                    <a href="./" class="lang-switch active">中文</a>
                 </div>
                 <a href="https://github.com/SPACESODA/epub2txt" class="github-link" target="_blank" rel="noopener">
                     <span class="github-text">GitHub</span>
@@ -60,43 +60,43 @@
         </header>
 
         <section class="hero">
-            <h1>epub2txt で<br>EPUBをテキストに効率よく変換</h1>
-            <p>EPUBファイルを一括で、読みやすく整えられたLLMにも適したプレーンテキスト(TXT)に変換する、強力なオープンソースPythonスクリプト。</p>
+            <h1>使用 epub2txt<br>將 EPUB 高效地轉為純文字</h1>
+            <p>這是一個強大的開源 Python 腳本，可將整個電子書庫批量轉換為清晰、易讀且適合 LLM 使用的純文字 (TXT)。</p>
             <div class="hero-buttons">
-                <a href="https://github.com/SPACESODA/epub2txt" class="cta-button primary" data-umami-event="epub | Get Script Button">スクリプトを入手</a>
-                <a href="#app" class="cta-button secondary" data-umami-event="epub | Go to Converter Button">オンラインで変換</a>
+                <a href="https://github.com/SPACESODA/epub2txt" class="cta-button primary" data-umami-event="epub | Get Script Button">前往腳本</a>
+                <a href="#app" class="cta-button secondary" data-umami-event="epub | Go to Converter Button">線上轉換</a>
             </div>
         </section>
 
         <section class="features">
             <div class="feature-card">
                 <div class="icon">⚡️</div>
-                <h3>超高速</h3>
-                <p>数百冊の本を数秒で効率的に処理し、メモリ(RAM)をほとんど消費しません。</p>
+                <h3>極速轉換</h3>
+                <p>利用高效的流式提取技術，瞬間處理數百本書，極低內存佔用。</p>
             </div>
             <div class="feature-card">
                 <div class="icon">📂</div>
-                <h3>一括処理</h3>
-                <p>単一ファイル、複数ファイル、またはフォルダ内のEPUBを、1つのコマンドでまとめて変換できます。</p>
+                <h3>批量處理</h3>
+                <p>一個指令即可轉換單個檔案、檔案列表或整個資料夾。</p>
             </div>
             <div class="feature-card">
                 <div class="icon">✨</div>
-                <h3>自動整形</h3>
-                <p>章立てなどの構造をなるべく保ち、読みやすいように適度な空行を追加します。</p>
+                <h3>自動排版</h3>
+                <p>自動保留結構並增加段落間距，提供清晰舒適的閱讀體驗。</p>
             </div>
         </section>
 
         <section class="showcase">
-            <h2>使い方は簡単</h2>
-            <p class="section-intro">同梱のヘルパースクリプトを使えば、<a href="https://github.com/SPACESODA/epub2txt#readme">README</a>の手順に従って、Pythonスクリプトを数ステップで実行できます。</p>
+            <h2>簡單易用</h2>
+            <p class="section-intro">隨附的輔助腳本已準備好，依照 <a href="https://github.com/SPACESODA/epub2txt#readme">README</a> 的指示即可在幾個步驟內執行 Python 腳本。</p>
             <div class="code-block code-block-spacer">
-                <div class="code-title">単一ファイルの変換</div>
+                <div class="code-title">轉換單個檔案</div>
                 <div class="code-content">
                     <span class="prompt">$</span> <span class="cmd">./run.sh</span> <span class="arg">my_book.epub</span>
                 </div>
             </div>
             <div class="code-block">
-                <div class="code-title">フォルダごとの変換</div>
+                <div class="code-title">轉換整個資料夾</div>
                 <div class="code-content">
                     <span class="prompt">$</span> <span class="cmd">./run.sh</span> <span class="arg">/Books/SciFi/</span> <span class="arg">/Books/History/</span><br>
                     <span class="comment">Scanning folder: /Books/SciFi/</span><br>
@@ -107,29 +107,29 @@
         </section>
 
         <section id="app" class="converter-section">
-            <h2>オンラインで変換</h2>
-            <p class="section-intro">Pythonスクリプトと同じロジックで、ブラウザ内で安全に処理します。1ファイルでも複数でも変換できます！</p>
+            <h2>線上轉換</h2>
+            <p class="section-intro">採用與 Python 腳本相同的邏輯，安全地在你的瀏覽器執行轉換。可轉換單一或多個檔案！</p>
             <div class="converter-card">
                 <div id="drop-zone" class="drop-zone">
                     <div class="drop-content">
                         <div class="icon">📂</div>
-                        <h2>ここにEPUBファイルをドラッグ＆ドロップ</h2>
-                        <p>またはクリックして選択</p>
+                        <h2>拖放 EPUB 檔案至此</h2>
+                        <p>或點擊選擇</p>
                         <input type="file" id="file-input" accept=".epub" multiple hidden>
                     </div>
                     <div id="loading-state" class="hidden">
                         <div class="spinner"></div>
-                        <p id="status-text">処理中...</p>
+                        <p id="status-text">處理中...</p>
                     </div>
                     <div id="success-state" class="hidden">
                         <div class="icon success">✅</div>
                         <h2 id="success-filename">book.txt</h2>
-                        <button id="download-btn" class="cta-button primary" data-umami-event="epub | Download TXT Button">TXTをダウンロード</button>
+                        <button id="download-btn" class="cta-button primary" data-umami-event="epub | Download TXT Button">下載 TXT</button>
                     </div>
                     <div id="error-state" class="hidden">
                         <div class="icon error">⚠️</div>
-                        <p id="error-msg">.epubファイルのみ対応しています。</p>
-                        <button id="retry-btn" class="cta-button secondary">もう一度試す</button>
+                        <p id="error-msg">處理檔案時發生錯誤</p>
+                        <button id="retry-btn" class="cta-button secondary">重試</button>
                     </div>
                 </div>
                 <div id="reset-container" class="reset-container"></div>
@@ -140,7 +140,7 @@
     <footer>
         <div class="container">
             <p>&copy; SPACESODA / ANTHONYC<br>Released under the MIT License.</p>
-            <p class="footer-github"><a href="https://github.com/SPACESODA/epub2txt" target="_blank" rel="noopener">⭐ GitHubでスターしてね</a></p>
+            <p class="footer-github"><a href="https://github.com/SPACESODA/epub2txt" target="_blank" rel="noopener">⭐ 在 GitHub 給個星吧</a></p>
         </div>
     </footer>
 

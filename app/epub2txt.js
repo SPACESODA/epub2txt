@@ -5,28 +5,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const ERRORS = {
         en: {
-            tooLarge: (size) => `File too large. Please use an EPUB under ${size}MB.`,
-            tooManyFiles: "EPUB has too many content files to process safely.",
-            noContent: "No readable HTML/XHTML content found in EPUB.",
-            missingOpf: "Invalid EPUB: OPF file declared in container.xml not found.",
-            invalidEpub: "Invalid EPUB/ZIP file.",
-            invalidOpf: "Invalid EPUB: OPF file is missing required sections."
+            tooLarge: (size) => `File too large. Please use an EPUB under ${size}MB`,
+            tooManyFiles: "EPUB has too many content files to process safely",
+            noContent: "No readable HTML/XHTML content found in EPUB",
+            missingOpf: "Invalid EPUB: OPF file declared in container.xml not found",
+            invalidEpub: "Invalid EPUB/ZIP file",
+            invalidOpf: "Invalid EPUB: OPF file is missing required sections"
         },
         ja: {
-            tooLarge: (size) => `ファイルサイズが大きすぎます。${size}MB未満のEPUBを使用してください。`,
-            tooManyFiles: "EPUBに含まれるコンテンツファイルが多すぎるため、安全に処理できません。",
-            noContent: "EPUB内に読み取り可能なHTML/XHTMLコンテンツが見つかりません。",
-            missingOpf: "無効なEPUBです: container.xmlで指定されたOPFファイルが見つかりません。",
-            invalidEpub: "無効なEPUB/ZIPファイルです。",
-            invalidOpf: "無効なEPUBです: OPFファイルに必要なセクションが欠落しています。"
+            tooLarge: (size) => `ファイルサイズが大きすぎます。${size}MB未満のEPUBを使用してください`,
+            tooManyFiles: "EPUBに含まれるコンテンツファイルが多すぎるため、安全に処理できません",
+            noContent: "EPUB内に読み取り可能なHTML/XHTMLコンテンツが見つかりません",
+            missingOpf: "無効なEPUBです: container.xmlで指定されたOPFファイルが見つかりません",
+            invalidEpub: "無効なEPUB/ZIPファイルです",
+            invalidOpf: "無効なEPUBです: OPFファイルに必要なセクションが欠落しています"
         },
         zh: {
-            tooLarge: (size) => `檔案過大，請使用小於 ${size}MB 的 EPUB。`,
-            tooManyFiles: "此 EPUB 內容檔案過多，無法安全處理。",
-            noContent: "EPUB 中沒有可讀的 HTML/XHTML 內容。",
-            missingOpf: "無效的 EPUB: container.xml 指定的 OPF 檔案不存在。",
-            invalidEpub: "無效的 EPUB/ZIP 檔案。",
-            invalidOpf: "無效的 EPUB: OPF 檔案缺少必要的區段。"
+            tooLarge: (size) => `檔案過大，請使用小於 ${size}MB 的 EPUB`,
+            tooManyFiles: "此 EPUB 內容檔案過多，無法安全處理",
+            noContent: "EPUB 中沒有可讀的 HTML/XHTML 內容",
+            missingOpf: "無效的 EPUB: container.xml 指定的 OPF 檔案不存在",
+            invalidEpub: "無效的 EPUB/ZIP 檔案",
+            invalidOpf: "無效的 EPUB: OPF 檔案缺少必要的區段"
         }
     };
 
@@ -80,8 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
             packaging: "Packaging ZIP...",
             processingFile: (current, total) => `File ${current}/${total}:`,
             errorPrefix: "Error: ",
-            onlyEpub: "Only .epub files are supported.",
-            genericError: "An unexpected error occurred.",
+            onlyEpub: "Only .epub files are supported",
+            genericError: "An unexpected error occurred",
             convertAnother: "Drag other .epub files to convert",
             selectFile: "select file(s)",
             downloadTxt: "Download TXT",
@@ -98,8 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
             packaging: "ZIPを作成中...",
             processingFile: (current, total) => `ファイル ${current}/${total}:`,
             errorPrefix: "エラー: ",
-            onlyEpub: ".epubファイルのみ対応しています。",
-            genericError: "予期しないエラーが発生しました。",
+            onlyEpub: ".epubファイルのみ対応しています",
+            genericError: "予期しないエラーが発生しました",
             convertAnother: "他の .epub ファイルをドラッグして変換",
             selectFile: "ファイルを選択",
             downloadTxt: "TXTをダウンロード",
@@ -116,8 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
             packaging: "正在打包 ZIP...",
             processingFile: (current, total) => `檔案 ${current}/${total}:`,
             errorPrefix: "錯誤: ",
-            onlyEpub: "請選擇 .epub 檔案。",
-            genericError: "發生未預期的錯誤。",
+            onlyEpub: "僅支援 .epub 檔案",
+            genericError: "發生未預期的錯誤",
             convertAnother: "拖放其他 .epub 檔案以轉換",
             selectFile: "選擇檔案",
             downloadTxt: "下載 TXT",
@@ -279,7 +279,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // Handle missing files in spine gracefully
             let content;
             try {
-                content = await zip.file(path).async("string");
+                const entry = zip.file(path);
+                if (!entry) {
+                    console.warn("Could not read file:", path);
+                    continue;
+                }
+                const bytes = await entry.async("uint8array");
+                content = decodeBytesToString(bytes);
             } catch (e) {
                 console.warn("Could not read file:", path);
                 continue;
@@ -340,6 +346,44 @@ document.addEventListener('DOMContentLoaded', () => {
             stack.push(part);
         }
         return stack.join('/');
+    }
+
+    function decodeBytesToString(bytes) {
+        const encoding = sniffEncoding(bytes) || 'utf-8';
+        try {
+            return new TextDecoder(encoding).decode(bytes);
+        } catch (e) {
+            return new TextDecoder('utf-8').decode(bytes);
+        }
+    }
+
+    function sniffEncoding(bytes) {
+        if (!bytes || !bytes.length) return null;
+        const headerBytes = bytes.subarray(0, 2048);
+        let headerText = '';
+        try {
+            headerText = new TextDecoder('utf-8').decode(headerBytes);
+        } catch (e) {
+            return null;
+        }
+
+        const xmlMatch = headerText.match(/<\?xml[^>]*encoding=["']([^"']+)["']/i);
+        if (xmlMatch) return normalizeEncodingName(xmlMatch[1]);
+
+        const metaCharsetMatch = headerText.match(/<meta[^>]*charset=["']?\s*([^"'\s/>]+)/i);
+        if (metaCharsetMatch) return normalizeEncodingName(metaCharsetMatch[1]);
+
+        const metaHttpEquivMatch = headerText.match(/<meta[^>]*http-equiv=["']content-type["'][^>]*content=["'][^"']*charset=([^"']+)["']/i);
+        if (metaHttpEquivMatch) return normalizeEncodingName(metaHttpEquivMatch[1]);
+
+        return null;
+    }
+
+    function normalizeEncodingName(name) {
+        if (!name) return null;
+        const cleaned = String(name).trim().toLowerCase().replace(/_/g, '-');
+        if (cleaned === 'utf8') return 'utf-8';
+        return cleaned;
     }
 
     function resolveZipPath(opfDir, href) {
@@ -610,7 +654,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return combined;
     }
 
-    function collectTextSegments(element, inPre = false, segments = [], state = null) {
+    /**
+     * Recursive function to traverse the DOM and collect text segments.
+     * Mirrors the logic in the Python script's `get_clean_text`.
+     * 
+     * @param {Node} element - The DOM node to traverse.
+     * @param {boolean} inPre - Whether the current node is inside a <pre> tag.
+     * @param {Array} segments - Accumulator for text segments.
+     * @param {Object} state - Tracks state across recursion (e.g., hasContent, lastWasSeparator).
+     * @param {number} listDepth - Current nesting level of lists (for indentation).
+     */
+    function collectTextSegments(element, inPre = false, segments = [], state = null, listDepth = 0) {
         if (!element) return segments;
         if (!state) {
             state = { hasContent: false, lastWasSeparator: false };
@@ -645,6 +699,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
+                // Handle Lists
+                if (tagName === 'UL' || tagName === 'OL') {
+                    if (!inPre) pushSegment("\n", false);
+                    collectTextSegments(node, inPre, segments, state, listDepth + 1);
+                    if (!inPre) pushSegment("\n", false);
+                    return;
+                }
+
+                if (tagName === 'LI') {
+                    if (!inPre) {
+                        pushSegment("\n", false);
+                        const indent = "  ".repeat(Math.max(0, listDepth - 1));
+                        pushSegment(indent + "- ", true);
+                    }
+                    collectTextSegments(node, inPre, segments, state, listDepth);
+                    if (!inPre) pushSegment("\n", false);
+                    return;
+                }
+
                 const headingLevel = HEADING_TAGS[tagName];
                 if (headingLevel && !inPre) {
                     const headingText = node.textContent.replace(/\s+/g, ' ').trim();
@@ -664,7 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     pushSegment("\n", false);
                 }
 
-                collectTextSegments(node, nextPre, segments, state);
+                collectTextSegments(node, nextPre, segments, state, listDepth);
 
                 if (isBlock && !inPre) {
                     pushSegment("\n", false);
@@ -698,6 +771,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return elements.length ? elements[0] : null;
     }
 
+    /**
+     * Handles the creation of a temporary Object URL for downloading.
+     * Revokes any existing URL to prevent memory leaks before creating a new one.
+     */
     function prepareBlobDownload(blob, filename, downloadType) {
         safeRevokeBlob();
         currentBlobUrl = URL.createObjectURL(blob);
@@ -769,6 +846,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Generates a unique filename by appending a counter if the name already exists.
+     * e.g., "book.txt" -> "book (2).txt" -> "book (3).txt"
+     */
     function makeUniqueFilename(name, usedNames) {
         if (!usedNames.has(name)) return name;
         const dotIndex = name.lastIndexOf('.');

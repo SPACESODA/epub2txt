@@ -20,6 +20,7 @@
 * **Batch Processing**: Convert multiple files or top-level folders in one run (non-recursive).
 * **Formatting**: Adds blank lines between paragraphs.
 * **Text Extraction**: Strips images, styles, scripts, and metadata—keeps only text from `.html/.htm/.xhtml` files.
+* **Smart List Handling**: Converts ordered and unordered lists into clean, indented bullet points, preserving nested structures.
 * **Interactive Mode**: Run without arguments to enter interactive mode. Supports dragging multiple files and folders.
 * **Output Handling**: If `-o` points to a new folder, it will be created; `-o` is for single inputs only.
 
@@ -115,6 +116,7 @@ If you prefer to run it manually or don't want to use the helper scripts:
 * **一括処理**: 複数のファイルやトップレベルのフォルダを一度に変換します (再帰的ではありません)。
 * **整形**: 段落間に空行を追加します。
 * **テキスト抽出**: 画像、スタイル、スクリプト、メタデータを削除し、`.html/.htm/.xhtml` ファイルからテキストのみを保持します。
+* **リストの整形**: 箇条書き・番号付きリストを、階層を保ったまま読みやすく整形します。
 * **インタラクティブモード**: 引数なしで実行するとインタラクティブモードに入ります。複数のファイルやフォルダのドラッグ＆ドロップに対応しています。
 * **出力処理**: `-o` で存在しないフォルダを指定した場合は作成します。`-o` は単一入力専用です。
 
@@ -217,6 +219,7 @@ If you prefer to run it manually or don't want to use the helper scripts:
 * **批量處理**: 一次轉換多個檔案或資料夾 (僅掃描第一層)。
 * **段落排版**: 在段落之間添加空行。
 * **文字提取**: 移除圖片、樣式、腳本與中繼資料，只保留 `.html/.htm/.xhtml` 文字。
+* **列表格式優化**: 自動保留列表的層級結構，並轉換為整齊易讀的縮排格式。
 * **互動模式**: 無參數執行即可進入互動模式，支援拖放多個檔案與資料夾。
 * **輸出處理**: 若 `-o` 指向的新資料夾不存在會自動建立；`-o` 只適用單檔輸入。
 

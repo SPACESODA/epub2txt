@@ -126,15 +126,20 @@ def parse_opf(zip_ref: zipfile.ZipFile, opf_path: str):
     root = ET.fromstring(opf_content)
     
     # Create the OPF namespace map dynamically to handle varying versions (2.0 vs 3.0).
-    # Grabs the namespace from the root tag itself.
-    ns = {'pkg': root.tag.split('}')[0].strip('{')}
+    # Some OPFs are un-namespaced; handle both cases.
+    has_namespace = '}' in root.tag
+    ns = {'pkg': root.tag.split('}')[0].strip('{')} if has_namespace else {}
     
     # 1. Parse Manifest: Map ID -> Href (File Path)
     # Creates a dictionary where valid IDs point to their actual file locations.
     manifest_items = {}
     nav_href = None
     ncx_href = None
-    for item in root.findall(".//pkg:manifest/pkg:item", ns):
+    if has_namespace:
+        manifest_items_iter = root.findall(".//pkg:manifest/pkg:item", ns)
+    else:
+        manifest_items_iter = root.findall(".//manifest/item")
+    for item in manifest_items_iter:
         item_id = item.attrib.get('id')
         href = item.attrib.get('href')
         if not item_id or not href:
@@ -150,12 +155,16 @@ def parse_opf(zip_ref: zipfile.ZipFile, opf_path: str):
     # 2. Parse Spine: Get linear reading order
     # The spine tells the parser the order in which to display the items found in the manifest.
     spine_hrefs = []
-    spine = root.find(".//pkg:spine", ns)
+    spine = root.find(".//pkg:spine", ns) if has_namespace else root.find(".//spine")
     if spine is not None:
         toc_id = spine.attrib.get('toc')
         if toc_id and toc_id in manifest_items:
             ncx_href = manifest_items[toc_id]
-        for itemref in spine.findall(".//pkg:itemref", ns):
+        if has_namespace:
+            spine_items = spine.findall(".//pkg:itemref", ns)
+        else:
+            spine_items = spine.findall(".//itemref")
+        for itemref in spine_items:
             item_id = itemref.attrib.get('idref')
             if item_id in manifest_items:
                 spine_hrefs.append(manifest_items[item_id])
@@ -396,7 +405,7 @@ def epub_to_text(epub_path: str, output_txt_path: str) -> None:
                             element.decompose()
                             
                         # Step 4: Extract text
-                        # Use our custom function to handle spacing intelligently
+                        # Use helper function to handle spacing intelligently
                         normalized_path = posixpath.normpath(file_path)
                         anchor_ids = chapter_anchors.get(normalized_path, [])
                         insert_anchor_markers(soup, anchor_ids)
@@ -469,6 +478,11 @@ def get_clean_text(soup: BeautifulSoup) -> str:
     """
     Extract text from BeautifulSoup object with intelligent whitespace handling.
     Preserves sentence structure for LLMs while maintaining paragraph separation.
+    
+    This function traverses the DOM tree recursively:
+    - Block elements (p, div, etc.) trigger line breaks.
+    - Lists are flattened with indentation to preserve hierarchy.
+    - Script/Style/Meta tags are ignored.
     """
     root = soup.body or soup
     if not root:
@@ -490,7 +504,7 @@ def get_clean_text(soup: BeautifulSoup) -> str:
             parts.append(("\n\n---\n\n", False))
             state['last_sep'] = True
 
-    def walk(node, in_pre: bool = False):
+    def walk(node, in_pre: bool = False, list_depth: int = 0):
         for child in node.children:
             if isinstance(child, NavigableString):
                 text = str(child)
@@ -513,6 +527,27 @@ def get_clean_text(soup: BeautifulSoup) -> str:
                 if name == 'br':
                     add_text("\n", in_pre)
                     continue
+
+                # Handle Lists
+                if name in ('ul', 'ol'):
+                    if not in_pre:
+                        add_text("\n", False)
+                    walk(child, in_pre, list_depth + 1)
+                    if not in_pre:
+                        add_text("\n", False)
+                    continue
+
+                if name == 'li':
+                    if not in_pre:
+                        add_text("\n", False)
+                        # Indent based on depth (depth 1 = no indent, depth 2 = 2 spaces, etc.)
+                        indent = "  " * max(0, list_depth - 1)
+                        add_text(indent + "- ", True)
+                    walk(child, in_pre, list_depth)
+                    if not in_pre:
+                        add_text("\n", False)
+                    continue
+
                 heading_level = HEADING_TAGS.get(name)
                 if heading_level and not in_pre:
                     heading_text = child.get_text(" ", strip=True)
@@ -528,7 +563,7 @@ def get_clean_text(soup: BeautifulSoup) -> str:
                 if is_block and not in_pre:
                     add_text("\n", False)
 
-                walk(child, next_pre)
+                walk(child, next_pre, list_depth)
 
                 if is_block and not in_pre:
                     add_text("\n", False)

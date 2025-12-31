@@ -699,6 +699,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
+                // Handle Bold
+                if (tagName === 'B' || tagName === 'STRONG') {
+                    if (!inPre) pushSegment("**", false);
+                    collectTextSegments(node, inPre, segments, state, listDepth);
+                    if (!inPre) pushSegment("**", false);
+                    return;
+                }
+
                 // Handle Lists
                 if (tagName === 'UL' || tagName === 'OL') {
                     if (!inPre) pushSegment("\n", false);
@@ -710,7 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (tagName === 'LI') {
                     if (!inPre) {
                         pushSegment("\n", false);
-                        const indent = "  ".repeat(Math.max(0, listDepth - 1));
+                        const indent = "    ".repeat(Math.max(0, listDepth - 1));
                         pushSegment(indent + "- ", true);
                     }
                     collectTextSegments(node, inPre, segments, state, listDepth);

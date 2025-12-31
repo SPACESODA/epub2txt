@@ -528,6 +528,14 @@ def get_clean_text(soup: BeautifulSoup) -> str:
                     add_text("\n", in_pre)
                     continue
 
+                if name in ('b', 'strong'):
+                    if not in_pre:
+                        add_text("**", False)
+                    walk(child, in_pre, list_depth)
+                    if not in_pre:
+                        add_text("**", False)
+                    continue
+
                 # Handle Lists
                 if name in ('ul', 'ol'):
                     if not in_pre:
@@ -541,7 +549,7 @@ def get_clean_text(soup: BeautifulSoup) -> str:
                     if not in_pre:
                         add_text("\n", False)
                         # Indent based on depth (depth 1 = no indent, depth 2 = 2 spaces, etc.)
-                        indent = "  " * max(0, list_depth - 1)
+                        indent = "    " * max(0, list_depth - 1)
                         add_text(indent + "- ", True)
                     walk(child, in_pre, list_depth)
                     if not in_pre:

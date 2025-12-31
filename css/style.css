@@ -96,7 +96,7 @@ header {
 }
 
 .hero h1 {
-    font-size: 3.25rem;
+    font-size: 3rem;
     font-weight: 800;
     line-height: 1.1;
     margin-bottom: 24px;
@@ -270,7 +270,7 @@ footer a:hover {
 
 @media (max-width: 768px) {
     .hero h1 {
-        font-size: 2.25rem;
+        font-size: 2.125rem;
     }
 
     .hero p {

@@ -47,6 +47,8 @@ header {
     font-weight: 700;
     font-size: 1.25rem;
     letter-spacing: -0.025em;
+    color: #fff;
+    text-decoration: none;
 }
 
 .header-links {

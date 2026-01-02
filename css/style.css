@@ -137,7 +137,7 @@ header {
 /* Features */
 .features {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 24px;
     margin-bottom: 80px;
 }
@@ -145,7 +145,7 @@ header {
 .feature-card {
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
-    padding: 32px;
+    padding: 28px;
     border-radius: 12px;
     transition: transform 0.2s;
 }
@@ -253,7 +253,7 @@ footer a {
 }
 
 footer a:hover {
-    color: var(--accent-color);
+    color: #eeeeee;
 }
 
 /* Mobile */

@@ -309,8 +309,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!lastWasSeparator) {
             output.push("\n\n");
         }
-        output.push("File converted using epub2txt\nhttps://github.com/SPACESODA/epub2txt\n");
-        output.push("\n");
+        const convertedAt = new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+        output.push(`File converted by epub2txt\nhttps://github.com/SPACESODA/epub2txt\nConverted at: ${convertedAt}\n`);
 
         return output.join('');
     }

@@ -16,6 +16,7 @@ import urllib.parse
 import shlex
 import re
 import posixpath
+from datetime import datetime, timezone
 
 # Graceful import handling for BeautifulSoup
 # Wraps this in a try-except block to provide an error message if the user hasn't installed the required 'beautifulsoup4' library yet.
@@ -431,9 +432,10 @@ def epub_to_text(epub_path: str, output_txt_path: str) -> None:
                 # Append footer
                 if not last_was_separator:
                     txt_file.write("\n\n")
-                txt_file.write("File converted using epub2txt\n")
+                conversion_timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+                txt_file.write("File converted by epub2txt\n")
                 txt_file.write("https://github.com/SPACESODA/epub2txt\n")
-                txt_file.write("\n")
+                txt_file.write(f"Converted at: {conversion_timestamp}\n")
     except zipfile.BadZipFile as e:
         raise ValueError(
             f"Invalid EPUB file: {e}\n"

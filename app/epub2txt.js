@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         H5: 5,
         H6: 6
     };
-    const MAX_HEADING_LEVEL = 5;
+    const MAX_HEADING_LEVEL = 6;
 
     // UI Elements
     const dropZone = document.getElementById('drop-zone');

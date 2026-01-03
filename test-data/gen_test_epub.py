@@ -134,6 +134,8 @@ def foo():
   <h3>Subsection A.1</h3>
   <p>Multiple paragraphs should keep blank lines between them.</p>
   <p>Second paragraph in the same section.</p>
+  <h6>Subsection A.1.a (H6)</h6>
+  <p>H6 should render as six hashes in output.</p>
   <figure>
     <img src="../images/cover.svg" alt="Cover"/>
     <figcaption>Figure caption text.</figcaption>

@@ -62,7 +62,7 @@ HEADING_TAGS = {
     'h5': 5,
     'h6': 6
 }
-MAX_HEADING_LEVEL = 5
+MAX_HEADING_LEVEL = 6
 ANCHOR_MARKER_TAG = 'epub2txt-sep'
 
 def resolve_zip_path(base_dir: str, href: str) -> str:

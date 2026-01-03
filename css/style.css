@@ -91,9 +91,39 @@ header {
     color: var(--accent-color);
 }
 
+/* Promo Banner */
+.promo-banner {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.promo-banner a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border-radius: 999px;
+    border: 1px solid rgba(59, 130, 246, 0.45);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-color);
+    background: linear-gradient(120deg, rgba(59, 130, 246, 0.28), rgba(59, 130, 246, 0.06));
+    box-shadow: 0 10px 26px rgba(59, 130, 246, 0.18);
+    transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.promo-banner a:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent-color);
+    color: #fff;
+    box-shadow: 0 14px 32px rgba(59, 130, 246, 0.28);
+}
+
 /* Hero */
 .hero {
-    padding: 80px 0;
+    padding: 45px 0 80px 0;
     text-align: center;
 }
 

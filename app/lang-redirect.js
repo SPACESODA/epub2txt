@@ -2,6 +2,20 @@
     const STORAGE_KEY = 'epub2txt-lang';
     const path = window.location.pathname || '/';
 
+    const ensureTrailingSlash = () => {
+        // Only check strictly for the language folders we know about
+        if ((path.endsWith('/ja') || path.endsWith('/zh')) && !path.endsWith('/')) {
+            const target = `${path}/` + window.location.search + window.location.hash;
+            window.location.replace(target);
+            return true;
+        }
+        return false;
+    };
+
+    if (ensureTrailingSlash()) {
+        return;
+    }
+
     const normalizeLang = (value) => {
         if (!value) return null;
         const lower = String(value).toLowerCase();
@@ -69,29 +83,45 @@
     };
 
     const saved = normalizeLang(safeStorageGet(STORAGE_KEY));
-    if (saved && saved !== currentLang) {
-        redirectIfNeeded(saved);
-        return;
-    }
 
-    if (!saved) {
-        const languageList = (navigator.languages && navigator.languages.length)
-            ? navigator.languages
-            : [navigator.language || navigator.userLanguage || ''];
-        let detected = 'en';
-        for (const lang of languageList) {
-            const normalized = normalizeLang(lang);
-            if (normalized === 'ja') {
-                detected = 'ja';
-                break;
-            }
-            if (normalized === 'zh') {
-                detected = 'zh';
-            }
+    // If the user visits a specific language page (non-root/en),
+    // trust that as the new preference and update storage accordingly.
+    // 'en' is treated as a default fallback, so storage is not auto-updated just for landing on it,
+    // unless explicitly switching or the logic below decides otherwise.
+    if (currentLang !== 'en') {
+        if (saved !== currentLang) {
+            safeStorageSet(STORAGE_KEY, currentLang);
         }
-        if (detected !== currentLang) {
-            redirectIfNeeded(detected);
+        // Do NOT redirect if limits are already on a specific language page (ja/zh).
+        // Being here implies the intent to view this specific language.
+    } else {
+        // Current location is the 'en' (root) page.
+        // If a valid preference is saved for another language, redirect there.
+        if (saved && saved !== 'en') {
+            redirectIfNeeded(saved);
             return;
+        }
+
+        // If no preference is saved, check the browser language and redirect if needed.
+        if (!saved) {
+            const languageList = (navigator.languages && navigator.languages.length)
+                ? navigator.languages
+                : [navigator.language || navigator.userLanguage || ''];
+            let detected = 'en';
+            for (const lang of languageList) {
+                const normalized = normalizeLang(lang);
+                if (normalized === 'ja') {
+                    detected = 'ja';
+                    break;
+                }
+                if (normalized === 'zh') {
+                    detected = 'zh';
+                }
+            }
+            if (detected !== 'en') {
+                redirectIfNeeded(detected);
+                return;
+            }
         }
     }
 

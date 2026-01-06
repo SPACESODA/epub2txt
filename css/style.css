@@ -297,7 +297,37 @@ footer a:hover {
 }
 
 .footer-github {
-    margin-top: 1.5rem;
+    margin-top: 0.75rem;
+}
+
+.footer-menu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding-top: 1.5rem;
+    font-size: 0.8rem;
+    line-height: 120%;
+}
+
+.footer-menu a {
+    opacity: 0.8;
+    transition: opacity 0.2s linear;
+}
+
+.footer-menu a:not(.footer-current):hover {
+    opacity: 1;
+}
+
+.footer-separator {
+    opacity: 0.25;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.footer-menu a.footer-current {
+    opacity: 0.3;
+    pointer-events: none;
 }
 
 @media (max-width: 768px) {

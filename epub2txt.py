@@ -400,9 +400,12 @@ def epub_to_text(epub_path: str, output_txt_path: str) -> None:
                         soup = BeautifulSoup(content, 'html.parser')
                         
                         # Remove non-content elements that are not desired in the text file
-                        # script/style = code
-                        # title/meta = invisible browser metadata
-                        for element in soup(['script', 'style', 'title', 'meta', 'noscript']):
+                        # Keep MathJax/TeX scripts for math extraction.
+                        for script in soup.find_all('script'):
+                            script_type = (script.get('type') or '').lower()
+                            if 'math/tex' not in script_type and 'math/latex' not in script_type:
+                                script.decompose()
+                        for element in soup(['style', 'title', 'meta', 'noscript']):
                             element.decompose()
                             
                         # Step 4: Extract text
@@ -493,6 +496,29 @@ def get_clean_text(soup: BeautifulSoup) -> str:
     parts = []
     state = {'has_content': False, 'last_sep': False}
 
+    def is_math_block(tag: Tag) -> bool:
+        display_attr = (tag.get('display') or '').lower()
+        if display_attr == 'block':
+            return True
+        classes = [c.lower() for c in (tag.get('class') or []) if isinstance(c, str)]
+        return any('block' in c or 'display' in c for c in classes)
+
+    def is_math_like_class(tag: Tag) -> bool:
+        classes = [c.lower() for c in (tag.get('class') or []) if isinstance(c, str)]
+        return any(key in c for c in classes for key in ('math', 'katex', 'latex', 'equation'))
+
+    def looks_like_latex(text: str) -> bool:
+        return bool(re.search(r"(\\[A-Za-z]+|[_^]|\\frac|\\sum|\\int)", text))
+
+    def get_math_annotation_latex(tag: Tag) -> str:
+        for ann in tag.find_all('annotation'):
+            encoding = (ann.get('encoding') or '').lower()
+            if 'tex' in encoding or 'latex' in encoding:
+                text = ann.get_text(strip=True)
+                if text:
+                    return text
+        return ""
+
     def add_text(text: str, is_pre: bool, is_content: bool = False):
         if not text:
             return
@@ -521,6 +547,19 @@ def get_clean_text(soup: BeautifulSoup) -> str:
 
             if isinstance(child, Tag):
                 name = child.name.lower()
+                if name == 'script':
+                    script_type = (child.get('type') or '').lower()
+                    if 'math/tex' in script_type or 'math/latex' in script_type:
+                        latex = child.get_text(strip=True)
+                        if latex:
+                            is_block = 'mode=display' in script_type
+                            if not in_pre and is_block:
+                                add_text("\n", False)
+                            wrapper = f"$${latex}$$" if is_block else f"${latex}$"
+                            add_text(wrapper, False, is_content=True)
+                            if not in_pre and is_block:
+                                add_text("\n", False)
+                    continue
                 if name in SKIP_TAGS:
                     continue
                 if name == ANCHOR_MARKER_TAG:
@@ -529,6 +568,35 @@ def get_clean_text(soup: BeautifulSoup) -> str:
                 if name == 'br':
                     add_text("\n", in_pre)
                     continue
+
+                if name == 'math':
+                    latex = get_math_annotation_latex(child)
+                    is_block = is_math_block(child)
+                    if latex:
+                        if not in_pre and is_block:
+                            add_text("\n", False)
+                        wrapper = f"$${latex}$$" if is_block else f"${latex}$"
+                        add_text(wrapper, False, is_content=True)
+                        if not in_pre and is_block:
+                            add_text("\n", False)
+                        continue
+                    if is_block and not in_pre:
+                        add_text("\n", False)
+                    walk(child, in_pre, list_depth)
+                    if is_block and not in_pre:
+                        add_text("\n", False)
+                    continue
+
+                if name == 'img':
+                    alt_text = child.get('alt') or child.get('aria-label') or child.get('title') or ""
+                    if alt_text and (is_math_like_class(child) or looks_like_latex(alt_text) or child.get('role') == 'math'):
+                        is_block = is_math_block(child)
+                        if not in_pre and is_block:
+                            add_text("\n", False)
+                        add_text(f"[MATH: {alt_text.strip()}]", False, is_content=True)
+                        if not in_pre and is_block:
+                            add_text("\n", False)
+                        continue
 
                 if name in ('b', 'strong'):
                     if not in_pre:

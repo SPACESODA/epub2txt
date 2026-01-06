@@ -140,6 +140,24 @@ def foo():
     <img src="../images/cover.svg" alt="Cover"/>
     <figcaption>Figure caption text.</figcaption>
   </figure>
+  <h2>Math Tests</h2>
+  <p>Inline MathML:
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <annotation encoding="application/x-tex">E=mc^2</annotation>
+      <mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup>
+    </math>
+  </p>
+  <p>Block MathML:</p>
+  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+    <annotation encoding="application/x-tex">\\int_0^1 x^2 dx</annotation>
+    <mrow><msubsup><mo>&#x222B;</mo><mn>0</mn><mn>1</mn></msubsup><msup><mi>x</mi><mn>2</mn></msup><mi>dx</mi></mrow>
+  </math>
+  <p>MathJax inline:</p>
+  <script type="math/tex">x^2 + y^2 = z^2</script>
+  <p>MathJax display:</p>
+  <script type="math/tex; mode=display">\\sum_{i=1}^n i</script>
+  <p>Math image (alt): <img src="../images/math.svg" class="math" alt="\\frac{a}{b}"/></p>
+  <p>Non-math image: <img src="../images/diagram.svg" alt="diagram 01"/></p>
   <div>
     <p>Nested div paragraph.</p>
   </div>
@@ -181,6 +199,8 @@ td, th { border: 1px solid #333; padding: 2px 4px; }
     <item id="toc" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
     <item id="css" href="styles/base.css" media-type="text/css"/>
     <item id="cover" href="images/cover.svg" media-type="image/svg+xml"/>
+    <item id="math" href="images/math.svg" media-type="image/svg+xml"/>
+    <item id="diagram" href="images/diagram.svg" media-type="image/svg+xml"/>
   </manifest>
   <spine>
     <itemref idref="intro"/>
@@ -256,6 +276,8 @@ td, th { border: 1px solid #333; padding: 2px 4px; }
         z.writestr('OEBPS/text/appendix.xhtml', appendix_content)
         z.writestr('OEBPS/styles/base.css', css_content)
         z.writestr('OEBPS/images/cover.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>')
+        z.writestr('OEBPS/images/math.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>')
+        z.writestr('OEBPS/images/diagram.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>')
 
     print(f"Created {output_path}")
 

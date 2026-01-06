@@ -612,7 +612,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlString, "text/html");
 
-        ['script', 'style', 'title', 'meta', 'noscript'].forEach(tag => {
+        doc.querySelectorAll('script').forEach(el => {
+            const type = (el.getAttribute('type') || '').toLowerCase();
+            if (!type.includes('math/tex') && !type.includes('math/latex')) {
+                el.remove();
+            }
+        });
+        ['style', 'title', 'meta', 'noscript'].forEach(tag => {
             doc.querySelectorAll(tag).forEach(el => el.remove());
         });
 
@@ -670,6 +676,32 @@ document.addEventListener('DOMContentLoaded', () => {
             state = { hasContent: false, lastWasSeparator: false };
         }
 
+        const isMathBlock = (node) => {
+            const display = (node.getAttribute && node.getAttribute('display') || '').toLowerCase();
+            if (display === 'block') return true;
+            const className = (node.getAttribute && node.getAttribute('class') || '').toLowerCase();
+            return className.includes('block') || className.includes('display');
+        };
+
+        const isMathLikeClass = (node) => {
+            const className = (node.getAttribute && node.getAttribute('class') || '').toLowerCase();
+            return className.includes('math') || className.includes('katex') || className.includes('latex') || className.includes('equation');
+        };
+
+        const looksLikeLatex = (text) => /\\[A-Za-z]+|[_^]|\\frac|\\sum|\\int/.test(text || '');
+
+        const getMathAnnotationLatex = (node) => {
+            const annotations = node.getElementsByTagName('annotation');
+            for (const ann of annotations) {
+                const encoding = (ann.getAttribute('encoding') || '').toLowerCase();
+                if (encoding.includes('tex') || encoding.includes('latex')) {
+                    const text = (ann.textContent || '').trim();
+                    if (text) return text;
+                }
+            }
+            return '';
+        };
+
         const pushSegment = (text, pre, isContent = false) => {
             if (!text) return;
             segments.push({ text, pre });
@@ -697,6 +729,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (tagName === 'BR') {
                     pushSegment("\n", inPre);
                     return;
+                }
+
+                if (tagName === 'SCRIPT') {
+                    const type = (node.getAttribute('type') || '').toLowerCase();
+                    if (type.includes('math/tex') || type.includes('math/latex')) {
+                        const latex = (node.textContent || '').trim();
+                        if (latex) {
+                            const isBlock = type.includes('mode=display');
+                            if (!inPre && isBlock) pushSegment("\n", false);
+                            const wrapped = isBlock ? `$$${latex}$$` : `$${latex}$`;
+                            pushSegment(wrapped, false, true);
+                            if (!inPre && isBlock) pushSegment("\n", false);
+                        }
+                    }
+                    return;
+                }
+
+                if (tagName === 'MATH') {
+                    const latex = getMathAnnotationLatex(node);
+                    const isBlock = isMathBlock(node);
+                    if (latex) {
+                        if (!inPre && isBlock) pushSegment("\n", false);
+                        const wrapped = isBlock ? `$$${latex}$$` : `$${latex}$`;
+                        pushSegment(wrapped, false, true);
+                        if (!inPre && isBlock) pushSegment("\n", false);
+                        return;
+                    }
+                    if (isBlock && !inPre) pushSegment("\n", false);
+                    collectTextSegments(node, inPre, segments, state, listDepth);
+                    if (isBlock && !inPre) pushSegment("\n", false);
+                    return;
+                }
+
+                if (tagName === 'IMG') {
+                    const altText = node.getAttribute('alt') || node.getAttribute('aria-label') || node.getAttribute('title') || '';
+                    const isMathImage = isMathLikeClass(node) || looksLikeLatex(altText) || node.getAttribute('role') === 'math';
+                    if (altText && isMathImage) {
+                        const isBlock = isMathBlock(node);
+                        if (!inPre && isBlock) pushSegment("\n", false);
+                        pushSegment(`[MATH: ${altText.trim()}]`, false, true);
+                        if (!inPre && isBlock) pushSegment("\n", false);
+                        return;
+                    }
                 }
 
                 // Handle Bold

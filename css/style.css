@@ -326,7 +326,8 @@ footer a:hover {
 }
 
 .footer-menu a.footer-current {
-    opacity: 0.3;
+    opacity: 0.5;
+    color: #ffffff;
     pointer-events: none;
 }
 

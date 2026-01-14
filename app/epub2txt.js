@@ -174,13 +174,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!files.length) return;
         fileInput.value = '';
 
-        const invalidFile = files.find(file => !file.name.toLowerCase().endsWith('.epub'));
-        if (invalidFile) {
+        // Ignore non-EPUB files unless none are valid.
+        const epubFiles = files.filter(file => file.name.toLowerCase().endsWith('.epub'));
+        if (!epubFiles.length) {
             showError(T.onlyEpub);
             return;
         }
 
-        const oversizedFile = files.find(file => file.size > MAX_FILE_SIZE_MB * 1024 * 1024);
+        const oversizedFile = epubFiles.find(file => file.size > MAX_FILE_SIZE_MB * 1024 * 1024);
         if (oversizedFile) {
             showError(getErrorText('tooLarge'));
             return;
@@ -190,30 +191,53 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoading();
 
         try {
-            if (files.length === 1) {
-                const text = await extractEPUBText(files[0]);
-                const resultFilename = files[0].name.replace(/\.epub$/i, '.txt');
+            if (epubFiles.length === 1) {
+                const text = await extractEPUBText(epubFiles[0]);
+                const resultFilename = epubFiles[0].name.replace(/\.epub$/i, '.txt');
                 prepareTextDownload(text, resultFilename);
                 return;
             }
 
             const zip = new JSZip();
             const usedNames = new Set();
+            let successfulCount = 0;
+            let lastError = null;
+            let lastErrorFile = null;
+            let lastSuccessText = null;
+            let lastSuccessFilename = null;
 
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
+            for (let i = 0; i < epubFiles.length; i++) {
+                const file = epubFiles[i];
                 let text;
                 try {
-                    text = await extractEPUBText(file, { index: i, total: files.length });
+                    text = await extractEPUBText(file, { index: i, total: epubFiles.length });
                 } catch (err) {
                     console.error(err);
-                    showError(T.fileError(file.name, normalizeError(err)));
-                    return;
+                    lastError = err;
+                    lastErrorFile = file;
+                    continue;
                 }
                 const baseName = file.name.replace(/\.epub$/i, '.txt');
                 const entryName = makeUniqueFilename(baseName, usedNames);
                 usedNames.add(entryName);
                 zip.file(entryName, text);
+                successfulCount += 1;
+                lastSuccessText = text;
+                lastSuccessFilename = entryName;
+            }
+
+            // If everything failed, surface the last error; otherwise return TXT or ZIP.
+            if (successfulCount === 0) {
+                const errorMessage = lastErrorFile
+                    ? T.fileError(lastErrorFile.name, normalizeError(lastError))
+                    : T.genericError;
+                showError(errorMessage);
+                return;
+            }
+
+            if (successfulCount === 1) {
+                prepareTextDownload(lastSuccessText, lastSuccessFilename);
+                return;
             }
 
             statusText.textContent = T.packaging;

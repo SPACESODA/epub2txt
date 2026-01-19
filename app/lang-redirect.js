@@ -3,7 +3,7 @@
     const path = window.location.pathname || '/';
 
     const ensureTrailingSlash = () => {
-        // Only check strictly for the language folders we know about
+        // Only normalize supported language folders.
         if ((path.endsWith('/ja') || path.endsWith('/zh')) && !path.endsWith('/')) {
             const target = `${path}/` + window.location.search + window.location.hash;
             window.location.replace(target);
@@ -21,7 +21,8 @@
         const lower = String(value).toLowerCase();
         if (lower.startsWith('ja')) return 'ja';
         if (lower.startsWith('zh')) return 'zh';
-        return 'en';
+        if (lower.startsWith('en')) return 'en';
+        return null;
     };
 
     const getBasePath = () => {
@@ -63,7 +64,8 @@
     const redirectIfNeeded = (lang) => {
         const target = targetFor(lang);
         if (normalizePath(path) === normalizePath(target)) return;
-        window.location.replace(target);
+        const suffix = window.location.search + window.location.hash;
+        window.location.replace(`${target}${suffix}`);
     };
 
     const safeStorageGet = (key) => {
@@ -82,18 +84,11 @@
         }
     };
 
+    // Local storage reflects only explicit user choice (lang switch), not auto-detect.
     const saved = normalizeLang(safeStorageGet(STORAGE_KEY));
 
-    // If the user visits a specific language page (non-root/en),
-    // trust that as the new preference and update storage accordingly.
-    // 'en' is treated as a default fallback, so storage is not auto-updated just for landing on it,
-    // unless explicitly switching or the logic below decides otherwise.
     if (currentLang !== 'en') {
-        if (saved !== currentLang) {
-            safeStorageSet(STORAGE_KEY, currentLang);
-        }
-        // Do NOT redirect if limits are already on a specific language page (ja/zh).
-        // Being here implies the intent to view this specific language.
+        // Respect direct visits to language pages; do not redirect or store a preference.
     } else {
         // Current location is the 'en' (root) page.
         // If a valid preference is saved for another language, redirect there.
@@ -110,12 +105,9 @@
             let detected = 'en';
             for (const lang of languageList) {
                 const normalized = normalizeLang(lang);
-                if (normalized === 'ja') {
-                    detected = 'ja';
+                if (normalized === 'ja' || normalized === 'zh') {
+                    detected = normalized;
                     break;
-                }
-                if (normalized === 'zh') {
-                    detected = 'zh';
                 }
             }
             if (detected !== 'en') {
